@@ -930,29 +930,10 @@ const ShiftScheduler = () => {
 
         /* Enhanced pairing frequency styles */
         .pairing-frequency {
-          max-height: 200px;
-          overflow-y: auto;
           border: 1px solid var(--border-color);
           border-radius: 4px;
           padding: 0.5rem;
-        }
-
-        .pairing-frequency::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .pairing-frequency::-webkit-scrollbar-track {
           background: var(--tier-bg);
-          border-radius: 3px;
-        }
-
-        .pairing-frequency::-webkit-scrollbar-thumb {
-          background: var(--accent-color);
-          border-radius: 3px;
-        }
-
-        .pairing-frequency::-webkit-scrollbar-thumb:hover {
-          background: var(--accent-hover);
         }
 
         /* Glassmorphism print section */
