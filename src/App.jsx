@@ -48,11 +48,12 @@ const ShiftScheduler = () => {
       contentContainer.style.position = 'absolute';
       contentContainer.style.left = '-9999px';
       contentContainer.style.top = '0';
-      contentContainer.style.width = '800px';
+      contentContainer.style.width = '1000px';
       contentContainer.style.backgroundColor = 'white';
-      contentContainer.style.padding = '20px';
+      contentContainer.style.padding = '30px';
       contentContainer.style.fontFamily = 'system-ui, Avenir, Helvetica, Arial, sans-serif';
       contentContainer.style.color = '#333';
+      contentContainer.style.lineHeight = '1.5';
 
       // Get the content elements
       const titleElement = document.querySelector('.main-title');
@@ -66,11 +67,12 @@ const ShiftScheduler = () => {
 
       // Clone and add title
       const titleClone = titleElement.cloneNode(true);
-      titleClone.style.fontSize = '24px';
+      titleClone.style.fontSize = '28px';
       titleClone.style.fontWeight = 'bold';
-      titleClone.style.marginBottom = '20px';
+      titleClone.style.marginBottom = '25px';
       titleClone.style.textAlign = 'center';
-      titleClone.style.color = '#333';
+      titleClone.style.color = '#000';
+      titleClone.style.lineHeight = '1.3';
       contentContainer.appendChild(titleClone);
 
       // Clone and add schedule table
@@ -92,20 +94,22 @@ const ShiftScheduler = () => {
       const ths = scheduleClone.querySelectorAll('th');
       ths.forEach(th => {
         th.style.backgroundColor = '#f5f5f5';
-        th.style.padding = '12px 8px';
-        th.style.border = '1px solid #ddd';
-        th.style.fontWeight = '600';
-        th.style.fontSize = '14px';
-        th.style.color = '#333';
+        th.style.padding = '14px 10px';
+        th.style.border = '1px solid #000';
+        th.style.fontWeight = '700';
+        th.style.fontSize = '16px';
+        th.style.color = '#000';
+        th.style.lineHeight = '1.4';
       });
       
       const tds = scheduleClone.querySelectorAll('td');
       tds.forEach(td => {
-        td.style.padding = '10px 8px';
-        td.style.border = '1px solid #ddd';
-        td.style.fontSize = '13px';
-        td.style.color = '#333';
+        td.style.padding = '12px 10px';
+        td.style.border = '1px solid #000';
+        td.style.fontSize = '15px';
+        td.style.color = '#000';
         td.style.backgroundColor = 'white';
+        td.style.lineHeight = '1.4';
       });
       
       contentContainer.appendChild(scheduleClone);
@@ -126,16 +130,18 @@ const ShiftScheduler = () => {
         
         const h3s = card.querySelectorAll('h3');
         h3s.forEach(h3 => {
-          h3.style.fontSize = '18px';
-          h3.style.fontWeight = '600';
-          h3.style.marginBottom = '12px';
-          h3.style.color = '#333';
+          h3.style.fontSize = '20px';
+          h3.style.fontWeight = '700';
+          h3.style.marginBottom = '15px';
+          h3.style.color = '#000';
+          h3.style.lineHeight = '1.3';
         });
         
         const divs = card.querySelectorAll('div');
         divs.forEach(div => {
-          div.style.color = '#333';
-          div.style.fontSize = '14px';
+          div.style.color = '#000';
+          div.style.fontSize = '15px';
+          div.style.lineHeight = '1.4';
         });
       });
       
@@ -149,11 +155,14 @@ const ShiftScheduler = () => {
 
       // Generate PDF
       const canvas = await html2canvas(contentContainer, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        pixelRatio: 3,
+        letterRendering: true,
+        foreignObjectRendering: true
       });
 
       // Remove temporary container
@@ -169,7 +178,7 @@ const ShiftScheduler = () => {
 
       const imgWidth = availableWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const imgData = canvas.toDataURL('image/png', 0.95);
+      const imgData = canvas.toDataURL('image/png', 1.0);
 
       if (imgHeight <= availableHeight) {
         pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
@@ -199,7 +208,7 @@ const ShiftScheduler = () => {
             0, 0, canvas.width, sourceHeight
           );
           
-          const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
+          const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
           const actualHeight = (sourceHeight * imgWidth) / canvas.width;
           
           pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, actualHeight);
