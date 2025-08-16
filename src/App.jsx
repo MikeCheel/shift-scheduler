@@ -57,13 +57,15 @@ const ShiftScheduler = () => {
 
       // Configure html2canvas options to capture the styling
       const canvas = await html2canvas(element, {
-        scale: 2, // Higher quality
+        scale: 1.5, // Good quality without being too large
         useCORS: true,
         allowTaint: true,
-        backgroundColor: null, // Preserve background colors
+        backgroundColor: null,
         logging: false,
         width: element.offsetWidth,
-        height: element.offsetHeight
+        height: element.offsetHeight,
+        scrollX: 0,
+        scrollY: 0
       });
 
       // Restore hidden elements
@@ -72,33 +74,77 @@ const ShiftScheduler = () => {
         if (el) el.style.display = '';
       });
 
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
+      // Create PDF with better page handling
       const pdf = new jsPDF('p', 'mm', 'a4');
-      
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      
+      // Calculate dimensions with margins
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      const availableHeight = pdfHeight - (margin * 2);
+      
+      // Calculate image dimensions to fit width
+      const imgWidth = availableWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      let heightLeft = imgHeight;
-      let position = 10; // Top margin
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight - 20; // Account for margins
-
-      // Add additional pages if content is too long
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight - 20;
+      // Convert canvas to image data
+      const imgData = canvas.toDataURL('image/png', 0.95);
+      
+      // If content fits on one page
+      if (imgHeight <= availableHeight) {
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      } else {
+        // Split content across multiple pages
+        const pageHeight = availableHeight;
+        let yPosition = 0;
+        let pageNumber = 0;
+        
+        while (yPosition < imgHeight) {
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+          
+          // Calculate the portion of the image for this page
+          const sourceY = (yPosition / imgHeight) * canvas.height;
+          const sourceHeight = Math.min(
+            (pageHeight / imgHeight) * canvas.height,
+            canvas.height - sourceY
+          );
+          
+          // Create a temporary canvas for this page's content
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          // Draw the relevant portion of the original canvas
+          pageCtx.drawImage(
+            canvas,
+            0, sourceY, canvas.width, sourceHeight,
+            0, 0, canvas.width, sourceHeight
+          );
+          
+          // Add this page's image to PDF
+          const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
+          const pageImgHeight = (sourceHeight * imgWidth) / canvas.width;
+          
+          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, pageImgHeight);
+          
+          yPosition += pageHeight;
+          pageNumber++;
+          
+          // Safety check to prevent infinite loop
+          if (pageNumber > 50) {
+            console.warn('PDF generation stopped at 50 pages to prevent infinite loop');
+            break;
+          }
+        }
       }
 
       // Generate filename with current date
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const dateStr = now.toISOString().split('T')[0];
       const filename = `shift-schedule-${dateStr}.pdf`;
 
       // Save the PDF
