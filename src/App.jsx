@@ -39,6 +39,22 @@ const ShiftScheduler = () => {
     }
   };
 
+  const getCurrentESTDateTime = () => {
+    const now = new Date();
+    const estTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+    const options = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    };
+    return estTime.toLocaleDateString('en-US', options);
+  };
+
   const generateSchedule = () => {
     // Filter out empty names and get active employees
     const activeEmployees = employees.filter(emp => emp.trim() !== '');
@@ -1124,8 +1140,113 @@ const ShiftScheduler = () => {
           }
         }
 
+        /* Footer and credit styles */
+        .credit-section {
+          background: var(--tier-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-top: 2rem;
+          text-align: center;
+          transition: all 0.3s ease;
+        }
+
+        .credit-section h4 {
+          color: var(--text-color);
+          font-size: 1rem;
+          font-weight: 600;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .credit-section p {
+          color: var(--text-muted);
+          font-size: 0.875rem;
+          margin: 0;
+        }
+
+        .footer {
+          background: var(--card-bg);
+          border-top: 1px solid var(--border-color);
+          padding: 1rem;
+          margin-top: 1rem;
+          text-align: center;
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          transition: all 0.3s ease;
+        }
+
+        .footer-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          align-items: center;
+        }
+
+        .claude-credit {
+          color: var(--text-muted);
+          font-size: 0.75rem;
+        }
+
+        .timestamp {
+          color: var(--accent-color);
+          font-weight: 500;
+          font-size: 0.8rem;
+        }
+
+        /* Glassmorphism footer styles */
+        body[data-style="glassmorphism"] .credit-section,
+        body[data-style="glassmorphism"] .footer {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        body[data-style="glassmorphism"][data-theme="dark"] .credit-section,
+        body[data-style="glassmorphism"][data-theme="dark"] .footer {
+          background: rgba(30, 41, 59, 0.2) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Neumorphism footer styles */
+        body[data-style="neumorphism"] .credit-section,
+        body[data-style="neumorphism"] .footer {
+          background: #e0e5ec !important;
+          box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff !important;
+          border: none !important;
+        }
+
+        body[data-style="neumorphism"][data-theme="dark"] .credit-section,
+        body[data-style="neumorphism"][data-theme="dark"] .footer {
+          background: #2d3748 !important;
+          box-shadow: inset 3px 3px 6px #1a202c, inset -3px -3px 6px #404c5a !important;
+        }
+
+        /* Mobile footer styles */
+        @media (max-width: 768px) {
+          .credit-section,
+          .footer {
+            margin-left: -1rem;
+            margin-right: -1rem;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+          }
+
+          .footer-content {
+            font-size: 0.75rem;
+          }
+
+          .timestamp {
+            font-size: 0.75rem;
+          }
+        }
+
         /* Print media styles */
         @media print {
+          .credit-section,
+          .footer {
+            display: none !important;
+          }
           .header-controls,
           .print-section {
             display: none !important;
@@ -1398,6 +1519,27 @@ const ShiftScheduler = () => {
           </div>
         </>
       )}
+
+          {/* Credit Section */}
+          <div className="credit-section">
+            <h4>Created by Mike Cheel</h4>
+            <p>Shift Rotation Scheduler - Designed for fair and efficient team scheduling</p>
+          </div>
+
+          {/* Footer */}
+          <div className="footer">
+            <div className="footer-content">
+              <div className="timestamp">
+                Last updated: {getCurrentESTDateTime()}
+              </div>
+              <div className="claude-credit">
+                🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
+              </div>
+              <div className="claude-credit">
+                Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>
