@@ -95,8 +95,9 @@ const ShiftScheduler = () => {
       if (imgHeight <= availableHeight) {
         pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       } else {
-        // Split content across multiple pages
-        const pageHeight = availableHeight;
+        // Split content across multiple pages with generous overlap to prevent cutoffs
+        const pageHeight = availableHeight * 0.9; // Use 90% of page height for safer breaks
+        const overlap = availableHeight * 0.1; // 10% overlap between pages
         let yPosition = 0;
         let pageNumber = 0;
         
@@ -105,10 +106,10 @@ const ShiftScheduler = () => {
             pdf.addPage();
           }
           
-          // Calculate the portion of the image for this page
-          const sourceY = (yPosition / imgHeight) * canvas.height;
+          // Calculate the portion of the image for this page with overlap
+          const sourceY = Math.max(0, (yPosition / imgHeight) * canvas.height - (overlap / imgHeight) * canvas.height);
           const sourceHeight = Math.min(
-            (pageHeight / imgHeight) * canvas.height,
+            ((pageHeight + overlap) / imgHeight) * canvas.height,
             canvas.height - sourceY
           );
           
@@ -1387,8 +1388,23 @@ const ShiftScheduler = () => {
 
           /* Ensure proper page breaks */
           .schedule-table,
-          .stats-grid {
-            page-break-inside: avoid;
+          .stats-grid,
+          .stats-card {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .pairing-frequency {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          /* Keep related content together */
+          .stats-card h3 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
 
           /* Force backgrounds to print */
