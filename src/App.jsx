@@ -1243,15 +1243,15 @@ const ShiftScheduler = () => {
 
         /* Print media styles */
         @media print {
+          /* Hide UI elements from print */
+          .header-controls,
+          .print-section,
           .credit-section,
           .footer {
             display: none !important;
           }
-          .header-controls,
-          .print-section {
-            display: none !important;
-          }
           
+          /* Clean print styling */
           body {
             background: white !important;
             color: black !important;
@@ -1261,6 +1261,8 @@ const ShiftScheduler = () => {
             background: white !important;
             box-shadow: none !important;
             border: none !important;
+            margin: 0 !important;
+            padding: 1rem !important;
           }
           
           .schedule-table,
@@ -1273,6 +1275,12 @@ const ShiftScheduler = () => {
           .schedule-table td {
             border: 1px solid #000 !important;
             color: black !important;
+          }
+
+          /* Ensure proper page breaks */
+          .schedule-table,
+          .stats-grid {
+            page-break-inside: avoid;
           }
         }
       `}</style>
