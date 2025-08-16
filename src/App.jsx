@@ -35,36 +35,129 @@ const ShiftScheduler = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      // Temporarily hide elements we don't want in PDF
-      const elementsToHide = [
-        '.header-controls',
-        '.print-section',
-        '.credit-section',
-        '.footer',
-        '.generate-btn'
-      ];
-      
-      const hiddenElements = [];
-      elementsToHide.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el && el.style.display !== 'none') {
-          hiddenElements.push({ element: el, originalDisplay: el.style.display });
-          el.style.display = 'none';
-        }
-      });
+      // Check if schedule exists
+      if (!schedule || schedule.length === 0) {
+        alert('Please generate a schedule first before downloading PDF.');
+        return;
+      }
 
-      // Wait a moment for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('Starting PDF generation...');
 
-      // Get content sections in order
+      // Create a container with only the content we want
+      const contentContainer = document.createElement('div');
+      contentContainer.style.position = 'absolute';
+      contentContainer.style.left = '-9999px';
+      contentContainer.style.top = '0';
+      contentContainer.style.width = '800px';
+      contentContainer.style.backgroundColor = 'white';
+      contentContainer.style.padding = '20px';
+      contentContainer.style.fontFamily = 'system-ui, Avenir, Helvetica, Arial, sans-serif';
+      contentContainer.style.color = '#333';
+
+      // Get the content elements
       const titleElement = document.querySelector('.main-title');
       const scheduleElement = document.querySelector('.schedule-table');
       const statsElement = document.querySelector('.stats-grid');
-      
+
       if (!titleElement || !scheduleElement || !statsElement) {
-        alert('Unable to generate PDF. Please ensure a schedule is generated.');
+        alert('Unable to find schedule content. Please ensure a schedule is generated.');
         return;
       }
+
+      // Clone and add title
+      const titleClone = titleElement.cloneNode(true);
+      titleClone.style.fontSize = '24px';
+      titleClone.style.fontWeight = 'bold';
+      titleClone.style.marginBottom = '20px';
+      titleClone.style.textAlign = 'center';
+      titleClone.style.color = '#333';
+      contentContainer.appendChild(titleClone);
+
+      // Clone and add schedule table
+      const scheduleClone = scheduleElement.cloneNode(true);
+      scheduleClone.style.width = '100%';
+      scheduleClone.style.marginBottom = '20px';
+      scheduleClone.style.border = '1px solid #ddd';
+      scheduleClone.style.borderRadius = '8px';
+      scheduleClone.style.overflow = 'hidden';
+      scheduleClone.style.backgroundColor = 'white';
+      
+      // Style table elements
+      const tables = scheduleClone.querySelectorAll('table');
+      tables.forEach(table => {
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
+      });
+      
+      const ths = scheduleClone.querySelectorAll('th');
+      ths.forEach(th => {
+        th.style.backgroundColor = '#f5f5f5';
+        th.style.padding = '12px 8px';
+        th.style.border = '1px solid #ddd';
+        th.style.fontWeight = '600';
+        th.style.fontSize = '14px';
+        th.style.color = '#333';
+      });
+      
+      const tds = scheduleClone.querySelectorAll('td');
+      tds.forEach(td => {
+        td.style.padding = '10px 8px';
+        td.style.border = '1px solid #ddd';
+        td.style.fontSize = '13px';
+        td.style.color = '#333';
+        td.style.backgroundColor = 'white';
+      });
+      
+      contentContainer.appendChild(scheduleClone);
+
+      // Clone and add stats
+      const statsClone = statsElement.cloneNode(true);
+      statsClone.style.display = 'block';
+      
+      const statsCards = statsClone.querySelectorAll('.stats-card');
+      statsCards.forEach((card, index) => {
+        card.style.border = '1px solid #ddd';
+        card.style.borderRadius = '8px';
+        card.style.padding = '16px';
+        card.style.marginBottom = '16px';
+        card.style.backgroundColor = 'white';
+        card.style.width = '100%';
+        card.style.boxSizing = 'border-box';
+        
+        const h3s = card.querySelectorAll('h3');
+        h3s.forEach(h3 => {
+          h3.style.fontSize = '18px';
+          h3.style.fontWeight = '600';
+          h3.style.marginBottom = '12px';
+          h3.style.color = '#333';
+        });
+        
+        const divs = card.querySelectorAll('div');
+        divs.forEach(div => {
+          div.style.color = '#333';
+          div.style.fontSize = '14px';
+        });
+      });
+      
+      contentContainer.appendChild(statsClone);
+
+      // Add container to body temporarily
+      document.body.appendChild(contentContainer);
+
+      // Wait for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Generate PDF
+      const canvas = await html2canvas(contentContainer, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      // Remove temporary container
+      document.body.removeChild(contentContainer);
 
       // Create PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -73,104 +166,66 @@ const ShiftScheduler = () => {
       const margin = 10;
       const availableWidth = pdfWidth - (margin * 2);
       const availableHeight = pdfHeight - (margin * 2);
-      let currentY = margin;
 
-      // Capture and add title
-      const titleCanvas = await html2canvas(titleElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false
-      });
-      
-      const titleImgData = titleCanvas.toDataURL('image/png', 0.95);
-      const titleWidth = availableWidth;
-      const titleHeight = (titleCanvas.height * titleWidth) / titleCanvas.width;
-      
-      pdf.addImage(titleImgData, 'PNG', margin, currentY, titleWidth, titleHeight);
-      currentY += titleHeight + 10;
+      const imgWidth = availableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const imgData = canvas.toDataURL('image/png', 0.95);
 
-      // Capture and add schedule table (ensure it doesn't split)
-      const scheduleCanvas = await html2canvas(scheduleElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false
-      });
-      
-      const scheduleImgData = scheduleCanvas.toDataURL('image/png', 0.95);
-      const scheduleWidth = availableWidth;
-      const scheduleHeight = (scheduleCanvas.height * scheduleWidth) / scheduleCanvas.width;
-      
-      // Check if schedule fits on current page
-      if (currentY + scheduleHeight > pdfHeight - margin) {
-        pdf.addPage();
-        currentY = margin;
-      }
-      
-      pdf.addImage(scheduleImgData, 'PNG', margin, currentY, scheduleWidth, scheduleHeight);
-      currentY += scheduleHeight + 15;
+      if (imgHeight <= availableHeight) {
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      } else {
+        // Split across pages
+        let currentY = 0;
+        let pageCount = 0;
 
-      // Handle stats cards individually to prevent splitting
-      const statsCards = statsElement.querySelectorAll('.stats-card');
-      
-      for (let i = 0; i < statsCards.length; i++) {
-        const card = statsCards[i];
-        
-        const cardCanvas = await html2canvas(card, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: null,
-          logging: false
-        });
-        
-        const cardImgData = cardCanvas.toDataURL('image/png', 0.95);
-        const cardWidth = availableWidth;
-        const cardHeight = (cardCanvas.height * cardWidth) / cardCanvas.width;
-        
-        // Check if card fits on current page
-        if (currentY + cardHeight > pdfHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
+        while (currentY < canvas.height) {
+          if (pageCount > 0) {
+            pdf.addPage();
+          }
+
+          const sourceHeight = Math.min(
+            (availableHeight / imgWidth) * canvas.width,
+            canvas.height - currentY
+          );
+
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          pageCtx.drawImage(
+            canvas,
+            0, currentY, canvas.width, sourceHeight,
+            0, 0, canvas.width, sourceHeight
+          );
+          
+          const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
+          const actualHeight = (sourceHeight * imgWidth) / canvas.width;
+          
+          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, actualHeight);
+
+          currentY += sourceHeight;
+          pageCount++;
         }
-        
-        pdf.addImage(cardImgData, 'PNG', margin, currentY, cardWidth, cardHeight);
-        currentY += cardHeight + 10;
       }
 
-      // Restore hidden elements
-      hiddenElements.forEach(({ element, originalDisplay }) => {
-        element.style.display = originalDisplay;
-      });
-
-      // Generate filename with unique timestamp
+      // Generate filename with current local timestamp
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timestamp = `${year}-${month}-${day}T${hours}-${minutes}-${seconds}`;
       const filename = `shift-schedule-${timestamp}.pdf`;
 
-      // Save the PDF
       pdf.save(filename);
+      console.log('PDF generated successfully');
       
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again or use the print button.');
-      
-      // Restore hidden elements in case of error
-      const elementsToHide = [
-        '.header-controls',
-        '.print-section',
-        '.credit-section',
-        '.footer',
-        '.generate-btn'
-      ];
-      
-      elementsToHide.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el) el.style.display = '';
-      });
     }
   };
 
