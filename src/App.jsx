@@ -40,7 +40,8 @@ const ShiftScheduler = () => {
         '.header-controls',
         '.print-section',
         '.credit-section',
-        '.footer'
+        '.footer',
+        '.generate-btn'
       ];
       
       const hiddenElements = [];
@@ -133,10 +134,10 @@ const ShiftScheduler = () => {
         element.style.display = originalDisplay;
       });
 
-      // Generate filename with current date
+      // Generate filename with unique timestamp
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
-      const filename = `shift-schedule-${dateStr}.pdf`;
+      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, -5); // Remove milliseconds and replace colons/dots
+      const filename = `shift-schedule-${timestamp}.pdf`;
 
       // Save the PDF
       pdf.save(filename);
@@ -150,7 +151,8 @@ const ShiftScheduler = () => {
         '.header-controls',
         '.print-section',
         '.credit-section',
-        '.footer'
+        '.footer',
+        '.generate-btn'
       ];
       
       elementsToHide.forEach(selector => {
@@ -1368,7 +1370,8 @@ const ShiftScheduler = () => {
           .header-controls,
           .print-section,
           .credit-section,
-          .footer {
+          .footer,
+          .generate-btn {
             display: none !important;
           }
           
