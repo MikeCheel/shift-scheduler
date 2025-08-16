@@ -1,12 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
 const ShiftScheduler = () => {
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [style, setStyle] = useState(() => localStorage.getItem('style') || 'default');
   const [employees, setEmployees] = useState([
     'Member A', 'Member B', 'Member C', 'Member D', 
     'Member E', 'Member F', 'Wildcard'
   ]);
   const [schedule, setSchedule] = useState([]);
   const [currentDay, setCurrentDay] = useState(1);
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-style', style);
+  }, [theme, style]);
+
+  const handleThemeToggle = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  const handleStyleChange = (e) => {
+    const newStyle = e.target.value;
+    setStyle(newStyle);
+    localStorage.setItem('style', newStyle);
+  };
 
   const generateSchedule = () => {
     // Filter out empty names and get active employees
@@ -400,64 +419,561 @@ const ShiftScheduler = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f3f4f6', 
-      padding: '2rem',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'flex-start'
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        width: '100%',
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        padding: '1.5rem',
-        color: '#1f2937'
+    <>
+      <style>{`
+        :root {
+          --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          --bg-gradient-dark: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+          --card-bg: #ffffff;
+          --card-bg-dark: #2d3748;
+          --text-color: #2d3748;
+          --text-color-dark: #e2e8f0;
+          --text-muted: #666666;
+          --text-muted-dark: #a0aec0;
+          --accent-color: #667eea;
+          --accent-hover: #5a67d8;
+          --border-color: #e2e8f0;
+          --border-color-dark: #4a5568;
+          --shadow: rgba(0,0,0,0.1);
+          --shadow-dark: rgba(0,0,0,0.3);
+          --tier-bg: #f7fafc;
+          --tier-bg-dark: #1a202c;
+        }
+
+        body {
+          background: var(--bg-gradient);
+          color: var(--text-color);
+          transition: all 0.3s ease;
+        }
+
+        body[data-theme="dark"] {
+          --card-bg: #2d3748;
+          --text-color: #e2e8f0;
+          --text-muted: #a0aec0;
+          --border-color: #4a5568;
+          --shadow: rgba(0,0,0,0.3);
+          --tier-bg: #1a202c;
+          background: var(--bg-gradient-dark);
+          color: var(--text-color-dark);
+        }
+
+        body[data-style="glassmorphism"] {
+          --card-bg: rgba(255, 255, 255, 0.1);
+          --tier-bg: rgba(255, 255, 255, 0.05);
+          --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body[data-style="glassmorphism"][data-theme="dark"] {
+          --card-bg: rgba(30, 41, 59, 0.3);
+          --tier-bg: rgba(30, 41, 59, 0.2);
+          --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body[data-style="neumorphism"] {
+          --card-bg: #e0e5ec;
+          --tier-bg: #d1d5db;
+          --border-color: transparent;
+          --shadow: none;
+        }
+
+        body[data-style="neumorphism"][data-theme="dark"] {
+          --card-bg: #2d3748;
+          --tier-bg: #374151;
+          --border-color: transparent;
+        }
+
+        .header-controls {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+          z-index: 10;
+          /* Visual indicator that new styles are loaded */
+          animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .style-selector {
+          background: var(--card-bg);
+          border: 2px solid var(--border-color);
+          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          color: var(--text-color);
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px var(--shadow);
+          min-width: 140px;
+        }
+
+        .style-selector:hover {
+          border-color: var(--accent-color);
+          box-shadow: 0 4px 8px var(--shadow);
+          transform: translateY(-1px);
+        }
+
+        .style-selector:focus {
+          outline: none;
+          border-color: var(--accent-color);
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .style-selector option {
+          background: var(--card-bg);
+          color: var(--text-color);
+          padding: 0.5rem;
+        }
+
+        .theme-toggle {
+          background: var(--card-bg);
+          border: 2px solid var(--border-color);
+          border-radius: 50px;
+          width: 70px;
+          height: 36px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          padding: 3px;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px var(--shadow);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .theme-toggle:hover {
+          border-color: var(--accent-color);
+          box-shadow: 0 4px 8px var(--shadow);
+          transform: translateY(-1px);
+        }
+
+        .theme-toggle:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px var(--shadow);
+        }
+
+
+        .theme-toggle-slider {
+          width: 28px;
+          height: 28px;
+          background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+          border-radius: 50%;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          color: white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          position: relative;
+        }
+
+        .theme-toggle-slider::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.2);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .theme-toggle:hover .theme-toggle-slider::before {
+          opacity: 1;
+        }
+
+        [data-theme="dark"] .theme-toggle-slider {
+          transform: translateX(32px);
+          background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+
+
+        /* Glassmorphism styles */
+        [data-style="glassmorphism"] .style-selector,
+        [data-style="glassmorphism"] .theme-toggle {
+          background: rgba(255, 255, 255, 0.15) !important;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.3) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        [data-style="glassmorphism"] .style-selector:hover,
+        [data-style="glassmorphism"] .theme-toggle:hover {
+          background: rgba(255, 255, 255, 0.25) !important;
+          border: 1px solid rgba(255, 255, 255, 0.4) !important;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        [data-style="glassmorphism"][data-theme="dark"] .style-selector,
+        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle {
+          background: rgba(30, 41, 59, 0.4) !important;
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        [data-style="glassmorphism"][data-theme="dark"] .style-selector:hover,
+        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle:hover {
+          background: rgba(30, 41, 59, 0.6) !important;
+          border: 1px solid rgba(255, 255, 255, 0.3) !important;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        /* Neumorphism styles */
+        [data-style="neumorphism"] .style-selector,
+        [data-style="neumorphism"] .theme-toggle {
+          background: #e0e5ec !important;
+          box-shadow: 9px 9px 18px #c8cdd4, -9px -9px 18px #f8fdff !important;
+          border: none !important;
+        }
+
+        [data-style="neumorphism"] .style-selector:hover,
+        [data-style="neumorphism"] .theme-toggle:hover {
+          box-shadow: 6px 6px 12px #c8cdd4, -6px -6px 12px #f8fdff !important;
+          transform: translateY(-2px);
+        }
+
+        [data-style="neumorphism"] .style-selector:active,
+        [data-style="neumorphism"] .theme-toggle:active {
+          box-shadow: inset 4px 4px 8px #c8cdd4, inset -4px -4px 8px #f8fdff !important;
+          transform: translateY(0);
+        }
+
+        [data-style="neumorphism"][data-theme="dark"] .style-selector,
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle {
+          background: #2d3748 !important;
+          box-shadow: 9px 9px 18px #1e2730, -9px -9px 18px #3c4760 !important;
+        }
+
+        [data-style="neumorphism"][data-theme="dark"] .style-selector:hover,
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:hover {
+          box-shadow: 6px 6px 12px #1e2730, -6px -6px 12px #3c4760 !important;
+          transform: translateY(-2px);
+        }
+
+        [data-style="neumorphism"][data-theme="dark"] .style-selector:active,
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:active {
+          box-shadow: inset 4px 4px 8px #1e2730, inset -4px -4px 8px #3c4760 !important;
+          transform: translateY(0);
+        }
+
+        /* Table styles */
+        .schedule-table {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 1.5rem;
+          transition: all 0.3s ease;
+        }
+
+        .schedule-table th {
+          background: var(--tier-bg);
+          color: var(--text-color);
+          padding: 0.75rem 1rem;
+          text-align: left;
+          font-size: 0.875rem;
+          font-weight: 500;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .schedule-table td {
+          padding: 0.75rem 1rem;
+          color: var(--text-color);
+          font-size: 0.875rem;
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .schedule-table tr:last-child td {
+          border-bottom: none;
+        }
+
+        .schedule-table .wildcard-row {
+          background: rgba(255, 193, 7, 0.1);
+        }
+
+        [data-theme="dark"] .schedule-table .wildcard-row {
+          background: rgba(255, 193, 7, 0.2);
+        }
+
+        .stats-card {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 1rem;
+          transition: all 0.3s ease;
+        }
+
+        .stats-card h3 {
+          color: var(--text-color);
+          font-size: 1.125rem;
+          font-weight: 600;
+          margin-bottom: 0.75rem;
+        }
+
+        .balance-info {
+          background: var(--tier-bg);
+          padding: 0.5rem;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          margin-top: 1rem;
+        }
+
+        .balance-info .font-medium {
+          color: var(--text-color);
+          font-weight: 500;
+          margin-bottom: 0.25rem;
+        }
+
+        .badge {
+          padding: 0.25rem 0.5rem;
+          border-radius: 9999px;
+          font-size: 0.75rem;
+          font-weight: 500;
+        }
+
+        .badge-yes {
+          background: rgba(34, 197, 94, 0.1);
+          color: #059669;
+        }
+
+        .badge-no {
+          background: rgba(245, 158, 11, 0.1);
+          color: #d97706;
+        }
+
+        [data-theme="dark"] .badge-yes {
+          background: rgba(34, 197, 94, 0.2);
+          color: #10b981;
+        }
+
+        [data-theme="dark"] .badge-no {
+          background: rgba(245, 158, 11, 0.2);
+          color: #f59e0b;
+        }
+
+        .text-success {
+          color: #059669;
+        }
+
+        .text-warning {
+          color: #d97706;
+        }
+
+        [data-theme="dark"] .text-success {
+          color: #10b981;
+        }
+
+        [data-theme="dark"] .text-warning {
+          color: #f59e0b;
+        }
+
+        .helper-row {
+          background: rgba(255, 193, 7, 0.05);
+          padding: 0.25rem;
+          border-radius: 4px;
+        }
+
+        [data-theme="dark"] .helper-row {
+          background: rgba(255, 193, 7, 0.1);
+        }
+
+        .text-muted {
+          color: var(--text-muted);
+        }
+
+        /* Glassmorphism table styles */
+        [data-style="glassmorphism"] .schedule-table,
+        [data-style="glassmorphism"] .stats-card {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        [data-style="glassmorphism"][data-theme="dark"] .schedule-table,
+        [data-style="glassmorphism"][data-theme="dark"] .stats-card {
+          background: rgba(30, 41, 59, 0.2) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-style="glassmorphism"] .schedule-table th,
+        [data-style="glassmorphism"] .balance-info {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-style="glassmorphism"][data-theme="dark"] .schedule-table th,
+        [data-style="glassmorphism"][data-theme="dark"] .balance-info {
+          background: rgba(30, 41, 59, 0.3) !important;
+        }
+
+        /* Neumorphism table styles */
+        [data-style="neumorphism"] .schedule-table,
+        [data-style="neumorphism"] .stats-card {
+          background: #e0e5ec !important;
+          box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff !important;
+          border: none !important;
+        }
+
+        [data-style="neumorphism"][data-theme="dark"] .schedule-table,
+        [data-style="neumorphism"][data-theme="dark"] .stats-card {
+          background: #2d3748 !important;
+          box-shadow: 8px 8px 16px #1a202c, -8px -8px 16px #404c5a !important;
+        }
+
+        [data-style="neumorphism"] .schedule-table th,
+        [data-style="neumorphism"] .balance-info {
+          background: #d1d5db !important;
+          box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff !important;
+        }
+
+        [data-style="neumorphism"][data-theme="dark"] .schedule-table th,
+        [data-style="neumorphism"][data-theme="dark"] .balance-info {
+          background: #374151 !important;
+          box-shadow: inset 3px 3px 6px #1a202c, inset -3px -3px 6px #4a5568 !important;
+        }
+
+        /* Special neumorphism handling for main card */
+        body[data-style="neumorphism"] .main-card {
+          background: #e0e5ec !important;
+          box-shadow: 20px 20px 40px #bebebe, -20px -20px 40px #ffffff !important;
+          border: none !important;
+        }
+
+        body[data-style="neumorphism"][data-theme="dark"] .main-card {
+          background: #2d3748 !important;
+          box-shadow: 20px 20px 40px #1a202c, -20px -20px 40px #404c5a !important;
+        }
+
+        /* Special glassmorphism handling for main card */
+        body[data-style="glassmorphism"] .main-card {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(20px) !important;
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        body[data-style="glassmorphism"][data-theme="dark"] .main-card {
+          background: rgba(30, 41, 59, 0.3) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+      `}</style>
+      <div style={{ 
+        minHeight: '100vh', 
+        padding: '2rem',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        position: 'relative'
       }}>
+        <div className="header-controls">
+          <select 
+            className="style-selector" 
+            value={style} 
+            onChange={handleStyleChange}
+          >
+            <option value="default">Default</option>
+            <option value="glassmorphism">Glassmorphism</option>
+            <option value="neumorphism">Neumorphism</option>
+          </select>
+          <button 
+            className="theme-toggle" 
+            onClick={handleThemeToggle}
+            aria-label="Toggle theme"
+          >
+            <div className="theme-toggle-slider">
+              {theme === 'light' ? '☀️' : '🌙'}
+            </div>
+          </button>
+        </div>
+        
+        <div className="main-card" style={{
+          maxWidth: '1200px',
+          width: '100%',
+          backgroundColor: 'var(--card-bg)',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px -1px var(--shadow)',
+          padding: '1.5rem',
+          color: 'var(--text-color)',
+          transition: 'all 0.3s ease'
+        }}>
         <h1 style={{ 
           fontSize: '1.875rem', 
           fontWeight: 'bold', 
-          color: '#1f2937', 
+          color: 'var(--text-color)', 
           marginBottom: '1.5rem', 
-          textAlign: 'center' 
+          textAlign: 'center',
+          transition: 'color 0.3s ease'
         }}>
           Shift Rotation Scheduler
         </h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Member Names</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ backgroundColor: 'var(--tier-bg)', padding: '1rem', borderRadius: '0.5rem', transition: 'background-color 0.3s ease' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-color)', transition: 'color 0.3s ease' }}>Member Names</h2>
           {employees.map((emp, index) => (
-            <div key={index} className="mb-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div key={index} style={{ marginBottom: '0.5rem' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '0.875rem', 
+                fontWeight: '500', 
+                color: 'var(--text-color)', 
+                marginBottom: '0.25rem',
+                transition: 'color 0.3s ease'
+              }}>
                 {index === 6 ? 'Wildcard Member:' : `Member ${index + 1}:`}
               </label>
               <input
                 type="text"
                 value={emp}
                 onChange={(e) => handleEmployeeNameChange(index, e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ 
+                  width: '100%', 
+                  padding: '0.5rem', 
+                  border: `1px solid var(--border-color)`, 
+                  borderRadius: '0.375rem',
+                  outline: 'none',
+                  backgroundColor: 'var(--card-bg)',
+                  color: 'var(--text-color)',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--accent-color)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
               />
             </div>
           ))}
         </div>
         
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Schedule Rules</h2>
-          <ul className="text-sm text-gray-700 space-y-2">
-            <li>• Each shift has exactly 2 people</li>
-            <li>• No person works consecutive days</li>
-            <li>• Complete round-robin: everyone pairs with everyone before repeating</li>
-            <li>• Wildcard gives regular members breaks when needed</li>
-            <li>• Focus on completing pairing rounds efficiently</li>
+        <div style={{ backgroundColor: 'var(--tier-bg)', padding: '1rem', borderRadius: '0.5rem', transition: 'background-color 0.3s ease' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-color)', transition: 'color 0.3s ease' }}>Schedule Rules</h2>
+          <ul style={{ fontSize: '0.875rem', color: 'var(--text-color)', listStyle: 'none', padding: 0, transition: 'color 0.3s ease' }}>
+            <li style={{ marginBottom: '0.5rem' }}>• Each shift has exactly 2 people</li>
+            <li style={{ marginBottom: '0.5rem' }}>• No person works consecutive days</li>
+            <li style={{ marginBottom: '0.5rem' }}>• Complete round-robin: everyone pairs with everyone before repeating</li>
+            <li style={{ marginBottom: '0.5rem' }}>• Wildcard gives regular members breaks when needed</li>
+            <li style={{ marginBottom: '0.5rem' }}>• Focus on completing pairing rounds efficiently</li>
           </ul>
           
           <button
             onClick={generateSchedule}
-            className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+            style={{ 
+              marginTop: '1rem', 
+              width: '100%', 
+              backgroundColor: 'var(--accent-color)', 
+              color: 'white', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '0.375rem',
+              border: 'none',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease'
+            }}
+            onMouseOver={(e) => e.target.style.backgroundColor = 'var(--accent-hover)'}
+            onMouseOut={(e) => e.target.style.backgroundColor = 'var(--accent-color)'}
           >
             Generate Schedule
           </button>
@@ -466,20 +982,22 @@ const ShiftScheduler = () => {
 
       {schedule.length > 0 && (
         <>
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
-            <h2 className="text-xl font-semibold p-4 bg-gray-50 border-b">Generated Schedule</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
+          <div className="schedule-table">
+            <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-color)', margin: 0 }}>Generated Schedule</h2>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%' }}>
+                <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Shift</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Member 1</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Member 2</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Wildcard Used</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Running Counts</th>
+                    <th className="schedule-table">Shift</th>
+                    <th className="schedule-table">Member 1</th>
+                    <th className="schedule-table">Member 2</th>
+                    <th className="schedule-table">Wildcard Used</th>
+                    <th className="schedule-table">Running Counts</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {schedule.map((shift, index) => {
                     const activeEmployees = employees.filter(emp => emp.trim() !== '');
                     const hasWildcard = activeEmployees.length >= 3;
@@ -501,23 +1019,23 @@ const ShiftScheduler = () => {
                     const wildcardCount = hasWildcard && wildcard ? runningCounts[wildcard] : 0;
                     
                     return (
-                      <tr key={index} className={shift.isWildcardUsed ? 'bg-yellow-50' : ''}>
-                        <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                      <tr key={index} className={shift.isWildcardUsed ? 'wildcard-row' : ''}>
+                        <td className="schedule-table" style={{ fontWeight: '500' }}>
                           Shift {shift.day}
-                          {shift.isBalancingShift && <span className="ml-1 text-xs text-blue-600">(balance)</span>}
+                          {shift.isBalancingShift && <span style={{ marginLeft: '0.25rem', fontSize: '0.75rem', color: 'var(--accent-color)' }}>(balance)</span>}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{shift.shift[0]}</td>
-                        <td className="px-4 py-3 text-sm text-gray-700">{shift.shift[1]}</td>
-                        <td className="px-4 py-3 text-sm">
+                        <td className="schedule-table">{shift.shift[0]}</td>
+                        <td className="schedule-table">{shift.shift[1]}</td>
+                        <td className="schedule-table">
                           {shift.isWildcardUsed ? 
-                            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Yes</span> : 
-                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">No</span>
+                            <span className="badge badge-yes">Yes</span> : 
+                            <span className="badge badge-no">No</span>
                           }
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-600">
-                          <div className="space-y-1">
+                        <td className="schedule-table" style={{ fontSize: '0.75rem' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <div>{regularEmployees.map((emp, i) => `${emp}: ${regularCounts[i]}`).join(' | ')}</div>
-                            {hasWildcard && wildcardCount > 0 && <div className="text-yellow-600">{wildcard}: {wildcardCount}</div>}
+                            {hasWildcard && wildcardCount > 0 && <div style={{ color: 'var(--accent-color)' }}>{wildcard}: {wildcardCount}</div>}
                           </div>
                         </td>
                       </tr>
@@ -528,40 +1046,40 @@ const ShiftScheduler = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-3">Member Statistics</h3>
-              <div className="space-y-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            <div className="stats-card">
+              <h3>Member Statistics</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {Object.entries(getEmployeeStats().employeeStats).map(([emp, stats]) => (
-                  <div key={emp} className={`flex justify-between text-sm ${stats.isRegular ? '' : 'bg-yellow-50 p-1 rounded'}`}>
-                    <span className="font-medium">{emp}:</span>
-                    <span>
+                  <div key={emp} className={stats.isRegular ? '' : 'helper-row'} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                    <span style={{ fontWeight: '500', color: 'var(--text-color)' }}>{emp}:</span>
+                    <span style={{ color: 'var(--text-color)' }}>
                       {stats.totalShifts} shifts
-                      {!stats.isRegular && <span className="text-yellow-600 ml-1">(helper)</span>}
-                      <span className="text-gray-500 ml-2">(max consecutive: {stats.maxConsecutive})</span>
+                      {!stats.isRegular && <span style={{ color: 'var(--accent-color)', marginLeft: '0.25rem' }}>(helper)</span>}
+                      <span className="text-muted" style={{ marginLeft: '0.5rem' }}>(max consecutive: {stats.maxConsecutive})</span>
                     </span>
                   </div>
                 ))}
-                <div className="mt-4 p-2 bg-blue-50 rounded text-sm">
-                  <div className="font-medium mb-1">Regular Member Balance:</div>
-                  <div>Min shifts: {getEmployeeStats().shiftBalance.min}</div>
-                  <div>Max shifts: {getEmployeeStats().shiftBalance.max}</div>
-                  <div className={`${getEmployeeStats().shiftBalance.range <= 1 ? 'text-green-600' : 'text-orange-600'}`}>
+                <div className="balance-info">
+                  <div className="font-medium">Regular Member Balance:</div>
+                  <div style={{ color: 'var(--text-color)' }}>Min shifts: {getEmployeeStats().shiftBalance.min}</div>
+                  <div style={{ color: 'var(--text-color)' }}>Max shifts: {getEmployeeStats().shiftBalance.max}</div>
+                  <div className={getEmployeeStats().shiftBalance.range <= 1 ? 'text-success' : 'text-warning'}>
                     Difference: {getEmployeeStats().shiftBalance.range} 
                     {getEmployeeStats().shiftBalance.range <= 1 ? ' ✓ Well balanced!' : ' - Could be more balanced'}
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">
+                  <div className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
                     * Wildcard gives breaks - appears only when needed for scheduling
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold mb-3">Pairing Frequency</h3>
-              <div className="space-y-1 text-sm max-h-40 overflow-y-auto">
+            <div className="stats-card">
+              <h3>Pairing Frequency</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', maxHeight: '10rem', overflowY: 'auto' }}>
                 {Object.entries(getPairingStats()).map(([pair, count]) => (
-                  <div key={pair} className="flex justify-between">
+                  <div key={pair} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-color)' }}>
                     <span>{pair}:</span>
                     <span>{count} times</span>
                   </div>
@@ -571,8 +1089,9 @@ const ShiftScheduler = () => {
           </div>
         </>
       )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
