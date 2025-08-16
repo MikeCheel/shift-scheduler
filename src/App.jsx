@@ -960,6 +960,170 @@ const ShiftScheduler = () => {
           box-shadow: 8px 8px 16px #1a202c, -8px -8px 16px #404c5a !important;
         }
 
+        /* Mobile responsive styles */
+        @media (max-width: 768px) {
+          /* Main container adjustments */
+          .main-container {
+            padding: 1rem !important;
+          }
+          
+          .main-card {
+            padding: 1rem !important;
+            margin: 0 !important;
+          }
+          
+          /* Header controls mobile layout */
+          .header-controls {
+            position: relative !important;
+            top: auto !important;
+            right: auto !important;
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 1rem !important;
+            gap: 0.75rem !important;
+          }
+          
+          .style-selector {
+            min-width: 120px !important;
+            font-size: 0.8rem !important;
+            padding: 0.6rem 0.8rem !important;
+          }
+          
+          .theme-toggle {
+            width: 60px !important;
+            height: 32px !important;
+          }
+          
+          .theme-toggle-slider {
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 12px !important;
+          }
+          
+          [data-theme="dark"] .theme-toggle-slider {
+            transform: translateX(26px) !important;
+          }
+          
+          /* Title spacing */
+          .main-title {
+            font-size: 1.5rem !important;
+            margin-bottom: 1rem !important;
+            text-align: center !important;
+          }
+          
+          /* Grid layouts to single column */
+          .member-rules-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+          }
+          
+          .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+          }
+          
+          /* Print buttons mobile layout */
+          .print-buttons {
+            justify-content: center !important;
+          }
+          
+          .print-btn {
+            flex: 1 1 auto !important;
+            min-width: 140px !important;
+            justify-content: center !important;
+          }
+          
+          /* Schedule table mobile */
+          .schedule-table-container {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          
+          .schedule-table table {
+            min-width: 600px !important;
+          }
+          
+          .schedule-table th,
+          .schedule-table td {
+            padding: 0.5rem !important;
+            font-size: 0.8rem !important;
+            white-space: nowrap !important;
+          }
+          
+          /* Form inputs mobile */
+          .member-input {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+          }
+          
+          /* Button improvements */
+          .generate-btn {
+            font-size: 1rem !important;
+            padding: 0.75rem 1rem !important;
+            touch-action: manipulation !important;
+          }
+          
+          /* Stats cards mobile */
+          .stats-card {
+            padding: 0.75rem !important;
+          }
+          
+          .stats-card h3 {
+            font-size: 1rem !important;
+            margin-bottom: 0.5rem !important;
+          }
+          
+          /* Member stats mobile layout */
+          .member-stat-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0.25rem !important;
+          }
+          
+          .balance-info {
+            font-size: 0.8rem !important;
+            padding: 0.5rem !important;
+          }
+          
+          /* Pairing frequency mobile */
+          .pairing-frequency {
+            font-size: 0.8rem !important;
+            padding: 0.5rem !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          /* Extra small screens */
+          .main-container {
+            padding: 0.5rem !important;
+          }
+          
+          .header-controls {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+          }
+          
+          .style-selector,
+          .theme-toggle {
+            width: 100% !important;
+            max-width: 200px !important;
+          }
+          
+          .print-buttons {
+            flex-direction: column !important;
+          }
+          
+          .print-btn {
+            width: 100% !important;
+          }
+          
+          .schedule-table th,
+          .schedule-table td {
+            padding: 0.4rem !important;
+            font-size: 0.75rem !important;
+          }
+        }
+
         /* Print media styles */
         @media print {
           .header-controls,
@@ -991,7 +1155,7 @@ const ShiftScheduler = () => {
           }
         }
       `}</style>
-      <div style={{ 
+      <div className="main-container" style={{ 
         minHeight: '100vh', 
         padding: '2rem',
         display: 'flex',
@@ -1030,7 +1194,7 @@ const ShiftScheduler = () => {
           color: 'var(--text-color)',
           transition: 'all 0.3s ease'
         }}>
-        <h1 style={{ 
+        <h1 className="main-title" style={{ 
           fontSize: '1.875rem', 
           fontWeight: 'bold', 
           color: 'var(--text-color)', 
@@ -1041,7 +1205,7 @@ const ShiftScheduler = () => {
           Shift Rotation Scheduler
         </h1>
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="member-rules-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ backgroundColor: 'var(--tier-bg)', padding: '1rem', borderRadius: '0.5rem', transition: 'background-color 0.3s ease' }}>
           <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem', color: 'var(--text-color)', transition: 'color 0.3s ease' }}>Member Names</h2>
           {employees.map((emp, index) => (
@@ -1057,6 +1221,7 @@ const ShiftScheduler = () => {
                 {index === 6 ? 'Wildcard Member:' : `Member ${index + 1}:`}
               </label>
               <input
+                className="member-input"
                 type="text"
                 value={emp}
                 onChange={(e) => handleEmployeeNameChange(index, e.target.value)}
@@ -1088,6 +1253,7 @@ const ShiftScheduler = () => {
           </ul>
           
           <button
+            className="generate-btn"
             onClick={generateSchedule}
             style={{ 
               marginTop: '1rem', 
@@ -1129,7 +1295,7 @@ const ShiftScheduler = () => {
             <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-color)', margin: 0 }}>Generated Schedule</h2>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="schedule-table-container" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%' }}>
                 <thead>
                   <tr>
@@ -1189,12 +1355,12 @@ const ShiftScheduler = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
             <div className="stats-card">
               <h3>Member Statistics</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {Object.entries(getEmployeeStats().employeeStats).map(([emp, stats]) => (
-                  <div key={emp} className={stats.isRegular ? '' : 'helper-row'} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <div key={emp} className={`member-stat-row ${stats.isRegular ? '' : 'helper-row'}`} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                     <span style={{ fontWeight: '500', color: 'var(--text-color)' }}>{emp}:</span>
                     <span style={{ color: 'var(--text-color)' }}>
                       {stats.totalShifts} shifts
