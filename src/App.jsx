@@ -35,16 +35,6 @@ const ShiftScheduler = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      // Get individual sections to capture separately
-      const titleElement = document.querySelector('.main-title');
-      const scheduleElement = document.querySelector('.schedule-table');
-      const statsElement = document.querySelector('.stats-grid');
-      
-      if (!titleElement || !scheduleElement || !statsElement) {
-        alert('Unable to generate PDF. Please ensure a schedule is generated.');
-        return;
-      }
-
       // Temporarily hide elements we don't want in PDF
       const elementsToHide = [
         '.header-controls',
@@ -53,9 +43,36 @@ const ShiftScheduler = () => {
         '.footer'
       ];
       
+      const hiddenElements = [];
       elementsToHide.forEach(selector => {
         const el = document.querySelector(selector);
-        if (el) el.style.display = 'none';
+        if (el && el.style.display !== 'none') {
+          hiddenElements.push({ element: el, originalDisplay: el.style.display });
+          el.style.display = 'none';
+        }
+      });
+
+      // Wait a moment for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Capture the main content area
+      const mainCard = document.querySelector('.main-card');
+      if (!mainCard) {
+        alert('Unable to generate PDF. Main content not found.');
+        return;
+      }
+
+      // Generate the canvas with high quality settings
+      const canvas = await html2canvas(mainCard, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false,
+        width: mainCard.scrollWidth,
+        height: mainCard.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
       });
 
       // Create PDF
@@ -64,78 +81,56 @@ const ShiftScheduler = () => {
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margin = 10;
       const availableWidth = pdfWidth - (margin * 2);
-      let currentY = margin;
+      const availableHeight = pdfHeight - (margin * 2);
 
-      // Capture and add title
-      const titleCanvas = await html2canvas(titleElement, {
-        scale: 1.5,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false
-      });
-      
-      const titleImgData = titleCanvas.toDataURL('image/png', 0.95);
-      const titleWidth = availableWidth;
-      const titleHeight = (titleCanvas.height * titleWidth) / titleCanvas.width;
-      
-      pdf.addImage(titleImgData, 'PNG', margin, currentY, titleWidth, titleHeight);
-      currentY += titleHeight + 10; // Add spacing
+      // Calculate image dimensions
+      const imgWidth = availableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // Capture and add schedule table
-      const scheduleCanvas = await html2canvas(scheduleElement, {
-        scale: 1.5,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false
-      });
-      
-      const scheduleImgData = scheduleCanvas.toDataURL('image/png', 0.95);
-      const scheduleWidth = availableWidth;
-      const scheduleHeight = (scheduleCanvas.height * scheduleWidth) / scheduleCanvas.width;
-      
-      // Check if schedule fits on current page
-      if (currentY + scheduleHeight > pdfHeight - margin) {
-        pdf.addPage();
-        currentY = margin;
-      }
-      
-      pdf.addImage(scheduleImgData, 'PNG', margin, currentY, scheduleWidth, scheduleHeight);
-      currentY += scheduleHeight + 10;
+      // Convert canvas to image
+      const imgData = canvas.toDataURL('image/png', 0.95);
 
-      // Capture each stats card separately to avoid splitting
-      const statsCards = statsElement.querySelectorAll('.stats-card');
-      
-      for (let i = 0; i < statsCards.length; i++) {
-        const card = statsCards[i];
-        
-        const cardCanvas = await html2canvas(card, {
-          scale: 1.5,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: null,
-          logging: false
-        });
-        
-        const cardImgData = cardCanvas.toDataURL('image/png', 0.95);
-        const cardWidth = availableWidth;
-        const cardHeight = (cardCanvas.height * cardWidth) / cardCanvas.width;
-        
-        // Check if card fits on current page
-        if (currentY + cardHeight > pdfHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
+      // If content fits on one page
+      if (imgHeight <= availableHeight) {
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+      } else {
+        // Split content across multiple pages
+        let currentY = 0;
+        let pageNumber = 0;
+
+        while (currentY < imgHeight) {
+          if (pageNumber > 0) {
+            pdf.addPage();
+          }
+
+          const remainingHeight = imgHeight - currentY;
+          const pageHeight = Math.min(availableHeight, remainingHeight);
+          
+          // Calculate source coordinates for this page
+          const srcY = (currentY / imgHeight) * canvas.height;
+          const srcHeight = (pageHeight / imgHeight) * canvas.height;
+
+          // Create a temporary canvas for this page section
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = srcHeight;
+          const pageCtx = pageCanvas.getContext('2d');
+          
+          // Draw the section onto the page canvas
+          pageCtx.drawImage(canvas, 0, srcY, canvas.width, srcHeight, 0, 0, canvas.width, srcHeight);
+          
+          // Add to PDF
+          const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
+          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, pageHeight);
+
+          currentY += pageHeight;
+          pageNumber++;
         }
-        
-        pdf.addImage(cardImgData, 'PNG', margin, currentY, cardWidth, cardHeight);
-        currentY += cardHeight + 10;
       }
 
       // Restore hidden elements
-      elementsToHide.forEach(selector => {
-        const el = document.querySelector(selector);
-        if (el) el.style.display = '';
+      hiddenElements.forEach(({ element, originalDisplay }) => {
+        element.style.display = originalDisplay;
       });
 
       // Generate filename with current date
@@ -149,6 +144,19 @@ const ShiftScheduler = () => {
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again or use the print button.');
+      
+      // Restore hidden elements in case of error
+      const elementsToHide = [
+        '.header-controls',
+        '.print-section',
+        '.credit-section',
+        '.footer'
+      ];
+      
+      elementsToHide.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = '';
+      });
     }
   };
 
