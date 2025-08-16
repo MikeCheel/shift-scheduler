@@ -159,8 +159,8 @@ const ShiftScheduler = () => {
 
   const getCurrentESTDateTime = () => {
     const now = new Date();
-    const estTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
     const options = {
+      timeZone: 'America/New_York',
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -170,7 +170,7 @@ const ShiftScheduler = () => {
       second: '2-digit',
       timeZoneName: 'short'
     };
-    return estTime.toLocaleDateString('en-US', options);
+    return now.toLocaleString('en-US', options);
   };
 
   const generateSchedule = () => {
