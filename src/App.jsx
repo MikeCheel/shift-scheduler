@@ -35,9 +35,12 @@ const ShiftScheduler = () => {
 
   const handleDownloadPDF = async () => {
     try {
-      // Get the main content area (exclude header controls, credit, footer)
-      const element = document.querySelector('.main-card');
-      if (!element) {
+      // Get individual sections to capture separately
+      const titleElement = document.querySelector('.main-title');
+      const scheduleElement = document.querySelector('.schedule-table');
+      const statsElement = document.querySelector('.stats-grid');
+      
+      if (!titleElement || !scheduleElement || !statsElement) {
         alert('Unable to generate PDF. Please ensure a schedule is generated.');
         return;
       }
@@ -55,93 +58,85 @@ const ShiftScheduler = () => {
         if (el) el.style.display = 'none';
       });
 
-      // Configure html2canvas options to capture the styling
-      const canvas = await html2canvas(element, {
-        scale: 1.5, // Good quality without being too large
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const availableWidth = pdfWidth - (margin * 2);
+      let currentY = margin;
+
+      // Capture and add title
+      const titleCanvas = await html2canvas(titleElement, {
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
-        logging: false,
-        width: element.offsetWidth,
-        height: element.offsetHeight,
-        scrollX: 0,
-        scrollY: 0
+        logging: false
       });
+      
+      const titleImgData = titleCanvas.toDataURL('image/png', 0.95);
+      const titleWidth = availableWidth;
+      const titleHeight = (titleCanvas.height * titleWidth) / titleCanvas.width;
+      
+      pdf.addImage(titleImgData, 'PNG', margin, currentY, titleWidth, titleHeight);
+      currentY += titleHeight + 10; // Add spacing
+
+      // Capture and add schedule table
+      const scheduleCanvas = await html2canvas(scheduleElement, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false
+      });
+      
+      const scheduleImgData = scheduleCanvas.toDataURL('image/png', 0.95);
+      const scheduleWidth = availableWidth;
+      const scheduleHeight = (scheduleCanvas.height * scheduleWidth) / scheduleCanvas.width;
+      
+      // Check if schedule fits on current page
+      if (currentY + scheduleHeight > pdfHeight - margin) {
+        pdf.addPage();
+        currentY = margin;
+      }
+      
+      pdf.addImage(scheduleImgData, 'PNG', margin, currentY, scheduleWidth, scheduleHeight);
+      currentY += scheduleHeight + 10;
+
+      // Capture each stats card separately to avoid splitting
+      const statsCards = statsElement.querySelectorAll('.stats-card');
+      
+      for (let i = 0; i < statsCards.length; i++) {
+        const card = statsCards[i];
+        
+        const cardCanvas = await html2canvas(card, {
+          scale: 1.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          logging: false
+        });
+        
+        const cardImgData = cardCanvas.toDataURL('image/png', 0.95);
+        const cardWidth = availableWidth;
+        const cardHeight = (cardCanvas.height * cardWidth) / cardCanvas.width;
+        
+        // Check if card fits on current page
+        if (currentY + cardHeight > pdfHeight - margin) {
+          pdf.addPage();
+          currentY = margin;
+        }
+        
+        pdf.addImage(cardImgData, 'PNG', margin, currentY, cardWidth, cardHeight);
+        currentY += cardHeight + 10;
+      }
 
       // Restore hidden elements
       elementsToHide.forEach(selector => {
         const el = document.querySelector(selector);
         if (el) el.style.display = '';
       });
-
-      // Create PDF with better page handling
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      // Calculate dimensions with margins
-      const margin = 10;
-      const availableWidth = pdfWidth - (margin * 2);
-      const availableHeight = pdfHeight - (margin * 2);
-      
-      // Calculate image dimensions to fit width
-      const imgWidth = availableWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      // Convert canvas to image data
-      const imgData = canvas.toDataURL('image/png', 0.95);
-      
-      // If content fits on one page
-      if (imgHeight <= availableHeight) {
-        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
-      } else {
-        // Split content across multiple pages with generous overlap to prevent cutoffs
-        const pageHeight = availableHeight * 0.9; // Use 90% of page height for safer breaks
-        const overlap = availableHeight * 0.1; // 10% overlap between pages
-        let yPosition = 0;
-        let pageNumber = 0;
-        
-        while (yPosition < imgHeight) {
-          if (pageNumber > 0) {
-            pdf.addPage();
-          }
-          
-          // Calculate the portion of the image for this page with overlap
-          const sourceY = Math.max(0, (yPosition / imgHeight) * canvas.height - (overlap / imgHeight) * canvas.height);
-          const sourceHeight = Math.min(
-            ((pageHeight + overlap) / imgHeight) * canvas.height,
-            canvas.height - sourceY
-          );
-          
-          // Create a temporary canvas for this page's content
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          // Draw the relevant portion of the original canvas
-          pageCtx.drawImage(
-            canvas,
-            0, sourceY, canvas.width, sourceHeight,
-            0, 0, canvas.width, sourceHeight
-          );
-          
-          // Add this page's image to PDF
-          const pageImgData = pageCanvas.toDataURL('image/png', 0.95);
-          const pageImgHeight = (sourceHeight * imgWidth) / canvas.width;
-          
-          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, pageImgHeight);
-          
-          yPosition += pageHeight;
-          pageNumber++;
-          
-          // Safety check to prevent infinite loop
-          if (pageNumber > 50) {
-            console.warn('PDF generation stopped at 50 pages to prevent infinite loop');
-            break;
-          }
-        }
-      }
 
       // Generate filename with current date
       const now = new Date();
