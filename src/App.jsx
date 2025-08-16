@@ -27,6 +27,18 @@ const ShiftScheduler = () => {
     localStorage.setItem('style', newStyle);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    // Simple PDF generation using browser's print to PDF functionality
+    // Open print dialog with instructions for PDF
+    if (window.confirm('To save as PDF:\n1. Click "Print"\n2. Choose "Save as PDF" as destination\n3. Click "Save"\n\nProceed to print dialog?')) {
+      window.print();
+    }
+  };
+
   const generateSchedule = () => {
     // Filter out empty names and get active employees
     const activeEmployees = employees.filter(emp => emp.trim() !== '');
@@ -861,6 +873,142 @@ const ShiftScheduler = () => {
           background: rgba(30, 41, 59, 0.3) !important;
           border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
+
+        /* Print section styles */
+        .print-section {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          transition: all 0.3s ease;
+        }
+
+        .print-section h3 {
+          color: var(--text-color);
+          font-size: 1.125rem;
+          font-weight: 600;
+          margin-bottom: 0.75rem;
+        }
+
+        .print-buttons {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .print-btn {
+          background: var(--accent-color);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .print-btn:hover {
+          background: var(--accent-hover);
+          box-shadow: 0 4px 8px var(--shadow);
+          transform: translateY(-1px);
+        }
+
+        .print-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .print-btn-icon {
+          font-size: 1rem;
+        }
+
+        /* Enhanced pairing frequency styles */
+        .pairing-frequency {
+          max-height: 200px;
+          overflow-y: auto;
+          border: 1px solid var(--border-color);
+          border-radius: 4px;
+          padding: 0.5rem;
+        }
+
+        .pairing-frequency::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .pairing-frequency::-webkit-scrollbar-track {
+          background: var(--tier-bg);
+          border-radius: 3px;
+        }
+
+        .pairing-frequency::-webkit-scrollbar-thumb {
+          background: var(--accent-color);
+          border-radius: 3px;
+        }
+
+        .pairing-frequency::-webkit-scrollbar-thumb:hover {
+          background: var(--accent-hover);
+        }
+
+        /* Glassmorphism print section */
+        body[data-style="glassmorphism"] .print-section {
+          background: rgba(255, 255, 255, 0.1) !important;
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        body[data-style="glassmorphism"][data-theme="dark"] .print-section {
+          background: rgba(30, 41, 59, 0.2) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Neumorphism print section */
+        body[data-style="neumorphism"] .print-section {
+          background: #e0e5ec !important;
+          box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff !important;
+          border: none !important;
+        }
+
+        body[data-style="neumorphism"][data-theme="dark"] .print-section {
+          background: #2d3748 !important;
+          box-shadow: 8px 8px 16px #1a202c, -8px -8px 16px #404c5a !important;
+        }
+
+        /* Print media styles */
+        @media print {
+          .header-controls,
+          .print-section {
+            display: none !important;
+          }
+          
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          
+          .main-card {
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          
+          .schedule-table,
+          .stats-card {
+            background: white !important;
+            border: 1px solid #000 !important;
+          }
+          
+          .schedule-table th,
+          .schedule-table td {
+            border: 1px solid #000 !important;
+            color: black !important;
+          }
+        }
       `}</style>
       <div style={{ 
         minHeight: '100vh', 
@@ -982,6 +1130,20 @@ const ShiftScheduler = () => {
 
       {schedule.length > 0 && (
         <>
+          <div className="print-section">
+            <h3>Print & Export</h3>
+            <div className="print-buttons">
+              <button className="print-btn" onClick={handlePrint}>
+                <span className="print-btn-icon">🖨️</span>
+                Print Schedule
+              </button>
+              <button className="print-btn" onClick={handleDownloadPDF}>
+                <span className="print-btn-icon">📄</span>
+                Download PDF
+              </button>
+            </div>
+          </div>
+
           <div className="schedule-table">
             <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--text-color)', margin: 0 }}>Generated Schedule</h2>
@@ -1077,9 +1239,9 @@ const ShiftScheduler = () => {
             
             <div className="stats-card">
               <h3>Pairing Frequency</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', maxHeight: '10rem', overflowY: 'auto' }}>
+              <div className="pairing-frequency">
                 {Object.entries(getPairingStats()).map(([pair, count]) => (
-                  <div key={pair} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-color)' }}>
+                  <div key={pair} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-color)', fontSize: '0.875rem', padding: '0.25rem 0' }}>
                     <span>{pair}:</span>
                     <span>{count} times</span>
                   </div>
