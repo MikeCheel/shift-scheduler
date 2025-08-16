@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const ShiftScheduler = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -31,11 +33,80 @@ const ShiftScheduler = () => {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    // Simple PDF generation using browser's print to PDF functionality
-    // Open print dialog with instructions for PDF
-    if (window.confirm('To save as PDF:\n1. Click "Print"\n2. Choose "Save as PDF" as destination\n3. Click "Save"\n\nProceed to print dialog?')) {
-      window.print();
+  const handleDownloadPDF = async () => {
+    try {
+      // Get the main content area (exclude header controls, credit, footer)
+      const element = document.querySelector('.main-card');
+      if (!element) {
+        alert('Unable to generate PDF. Please ensure a schedule is generated.');
+        return;
+      }
+
+      // Temporarily hide elements we don't want in PDF
+      const elementsToHide = [
+        '.header-controls',
+        '.print-section',
+        '.credit-section',
+        '.footer'
+      ];
+      
+      elementsToHide.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = 'none';
+      });
+
+      // Configure html2canvas options to capture the styling
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null, // Preserve background colors
+        logging: false,
+        width: element.offsetWidth,
+        height: element.offsetHeight
+      });
+
+      // Restore hidden elements
+      elementsToHide.forEach(selector => {
+        const el = document.querySelector(selector);
+        if (el) el.style.display = '';
+      });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Top margin
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight - 20; // Account for margins
+
+      // Add additional pages if content is too long
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight - 20;
+      }
+
+      // Generate filename with current date
+      const now = new Date();
+      const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+      const filename = `shift-schedule-${dateStr}.pdf`;
+
+      // Save the PDF
+      pdf.save(filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again or use the print button.');
     }
   };
 
@@ -1241,7 +1312,7 @@ const ShiftScheduler = () => {
           }
         }
 
-        /* Print media styles */
+        /* Print media styles - maintain theme styling */
         @media print {
           /* Hide UI elements from print */
           .header-controls,
@@ -1251,36 +1322,33 @@ const ShiftScheduler = () => {
             display: none !important;
           }
           
-          /* Clean print styling */
-          body {
-            background: white !important;
-            color: black !important;
-          }
-          
+          /* Maintain theme colors in print */
           .main-card {
-            background: white !important;
             box-shadow: none !important;
-            border: none !important;
             margin: 0 !important;
             padding: 1rem !important;
           }
           
           .schedule-table,
           .stats-card {
-            background: white !important;
-            border: 1px solid #000 !important;
+            box-shadow: none !important;
           }
           
           .schedule-table th,
           .schedule-table td {
-            border: 1px solid #000 !important;
-            color: black !important;
+            border: 1px solid var(--border-color) !important;
           }
 
           /* Ensure proper page breaks */
           .schedule-table,
           .stats-grid {
             page-break-inside: avoid;
+          }
+
+          /* Force backgrounds to print */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
           }
         }
       `}</style>
