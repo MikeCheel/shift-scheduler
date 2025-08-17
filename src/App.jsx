@@ -5,12 +5,15 @@ import html2canvas from 'html2canvas';
 const ShiftScheduler = () => {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [style, setStyle] = useState(() => localStorage.getItem('style') || 'default');
+  const [enablePdfDownload, setEnablePdfDownload] = useState(() => localStorage.getItem('enablePdfDownload') !== 'false');
   const [employees, setEmployees] = useState([
-    'Member A', 'Member B', 'Member C', 'Member D', 
-    'Member E', 'Member F', 'Wildcard'
+    'Alice', 'Bob', 'Charlie', 'Diana', 
+    'Eve', 'Frank', 'Wildcard'
   ]);
   const [schedule, setSchedule] = useState([]);
   const [currentDay, setCurrentDay] = useState(1);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [memberLetters, setMemberLetters] = useState({});
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
@@ -29,6 +32,16 @@ const ShiftScheduler = () => {
     localStorage.setItem('style', newStyle);
   };
 
+  const handlePdfToggle = () => {
+    const newSetting = !enablePdfDownload;
+    setEnablePdfDownload(newSetting);
+    localStorage.setItem('enablePdfDownload', newSetting.toString());
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -43,204 +56,323 @@ const ShiftScheduler = () => {
 
       console.log('Starting PDF generation...');
 
-      // Temporarily apply print media styles to capture exact print appearance
-      const originalMediaType = document.documentElement.style.getPropertyValue('--media-type');
-      
-      // Create a style element to force print styles
-      const printStyleElement = document.createElement('style');
-      printStyleElement.textContent = `
-        @media screen {
-          .header-controls,
-          .print-section,
-          .credit-section,
-          .footer,
-          .generate-btn {
-            display: none !important;
-          }
-          
-          .main-card {
-            box-shadow: none !important;
-            margin: 0 !important;
-            padding: 1rem !important;
-            background: white !important;
-          }
-          
-          .schedule-table,
-          .stats-card {
-            box-shadow: none !important;
-            background: white !important;
-          }
-          
-          .schedule-table th,
-          .schedule-table td {
-            border: 1px solid var(--border-color) !important;
-          }
-          
-          .schedule-table,
-          .stats-grid,
-          .stats-card {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-          }
-
-          .pairing-frequency {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            max-height: none !important;
-            overflow: visible !important;
-          }
-
-          .stats-card h3 {
-            page-break-after: avoid !important;
-            break-after: avoid !important;
-          }
-
-          * {
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-          }
-        }
-      `;
-      document.head.appendChild(printStyleElement);
-
-      // Create a container that captures the main content area
-      const mainCard = document.querySelector('.main-card');
-      if (!mainCard) {
-        alert('Unable to find main content area.');
-        return;
-      }
-
-      // Clone the main card to avoid modifying the original
-      const contentContainer = mainCard.cloneNode(true);
-      
-      // Position the container for capture
-      contentContainer.style.position = 'fixed';
-      contentContainer.style.left = '0';
-      contentContainer.style.top = '0';
-      contentContainer.style.width = '210mm';
-      contentContainer.style.minHeight = 'auto';
-      contentContainer.style.maxWidth = '210mm';
-      contentContainer.style.backgroundColor = '#ffffff';
-      contentContainer.style.margin = '0';
-      contentContainer.style.padding = '15mm';
-      contentContainer.style.boxSizing = 'border-box';
-      contentContainer.style.zIndex = '10000';
-      contentContainer.style.overflow = 'visible';
-      contentContainer.style.boxShadow = 'none';
-      contentContainer.style.borderRadius = '0';
-
-      // Remove elements that shouldn't appear in PDF (matching print styles)
-      const elementsToRemove = contentContainer.querySelectorAll('.header-controls, .print-section, .credit-section, .footer, .generate-btn');
-      elementsToRemove.forEach(el => el.remove());
-
-      // Add container to body temporarily
-      document.body.appendChild(contentContainer);
-
-      // Wait for styles to apply and fonts to load
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate PDF with settings optimized for print matching
-      const canvas = await html2canvas(contentContainer, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        pixelRatio: 2,
-        letterRendering: true,
-        foreignObjectRendering: false,
-        width: contentContainer.scrollWidth,
-        height: contentContainer.scrollHeight,
-        scrollX: 0,
-        scrollY: 0,
-        onclone: function(clonedDoc) {
-          // Ensure print styles are applied in the clone
-          const clonedPrintStyle = clonedDoc.createElement('style');
-          clonedPrintStyle.textContent = printStyleElement.textContent;
-          clonedDoc.head.appendChild(clonedPrintStyle);
-        }
-      });
-
-      // Clean up
-      document.body.removeChild(contentContainer);
-      document.head.removeChild(printStyleElement);
-
-      // Create PDF with better page handling
+      // Create PDF with professional styling
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10; // Reduced margin to match print preview
-      const availableWidth = pdfWidth - (margin * 2);
-      const availableHeight = pdfHeight - (margin * 2);
+      const margin = 20;
+      const contentWidth = pdfWidth - (margin * 2);
+      const lineHeight = 6;
+      let currentY = margin;
 
-      const imgWidth = availableWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      // PDF styling colors
+      const colors = {
+        primary: '#2563eb',
+        secondary: '#64748b',
+        text: '#1f2937',
+        lightGray: '#f8fafc',
+        border: '#e2e8f0'
+      };
 
-      if (imgHeight <= availableHeight) {
-        // Content fits on one page
-        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
-      } else {
-        // Content needs multiple pages - use minimal overlap to prevent cutting
-        const overlap = 5; // mm of overlap to prevent cutting content
-        const pageHeightInPixels = (availableHeight / imgWidth) * canvas.width;
-        const overlapInPixels = (overlap / imgWidth) * canvas.width;
-        
-        let currentY = 0;
-        let pageCount = 0;
-
-        while (currentY < canvas.height) {
-          if (pageCount > 0) {
-            pdf.addPage();
-          }
-
-          // Calculate the height for this page with overlap consideration
-          let sourceHeight;
-          if (currentY + pageHeightInPixels >= canvas.height) {
-            // Last page - take remaining content
-            sourceHeight = canvas.height - currentY;
-          } else {
-            // Not last page - add overlap to prevent cutting
-            sourceHeight = Math.min(pageHeightInPixels + overlapInPixels, canvas.height - currentY);
-          }
-
-          // Create canvas for this page
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const pageCtx = pageCanvas.getContext('2d');
-          
-          // Fill with white background
-          pageCtx.fillStyle = '#ffffff';
-          pageCtx.fillRect(0, 0, canvas.width, sourceHeight);
-          
-          // Draw the content
-          pageCtx.drawImage(
-            canvas,
-            0, currentY, canvas.width, sourceHeight,
-            0, 0, canvas.width, sourceHeight
-          );
-          
-          const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-          const actualHeight = (sourceHeight * imgWidth) / canvas.width;
-          
-          // Ensure the image fits within page bounds
-          const finalHeight = Math.min(actualHeight, availableHeight);
-          
-          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, finalHeight);
-
-          // Move to next section with overlap consideration
-          if (currentY + pageHeightInPixels >= canvas.height) {
-            break; // We're done
-          } else {
-            currentY += pageHeightInPixels - (overlapInPixels / 2); // Overlap by half to ensure no gaps
-          }
-          pageCount++;
+      // Helper function to add new page if needed with better margin handling
+      const checkNewPage = (additionalHeight = 0) => {
+        const bottomMargin = 30; // Increased bottom margin to prevent cutoff
+        if (currentY + additionalHeight > pdfHeight - bottomMargin) {
+          pdf.addPage();
+          currentY = margin;
+          return true;
         }
-      }
+        return false;
+      };
+
+      // Title section
+      pdf.setFillColor(colors.primary);
+      pdf.rect(margin, currentY, contentWidth, 20, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Shift Rotation Schedule', pdfWidth / 2, currentY + 13, { align: 'center' });
+      
+      currentY += 30;
+
+      // Generation info
+      pdf.setTextColor(colors.secondary);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      pdf.text(`Generated on: ${dateStr}`, margin, currentY);
+      
+      currentY += 15;
+
+      // Schedule table
+      checkNewPage(20);
+      
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Schedule Overview', margin, currentY);
+      currentY += 10;
+
+      // Dynamic column widths based on content
+      const headers = ['Shift', 'Member 1', 'Member 2', 'Wildcard', 'Running Totals'];
+      
+      // Calculate optimized column widths to prevent cutoff
+      const calculateOptimalColumnWidths = () => {
+        const activeEmployees = employees.filter(emp => emp.trim() !== '');
+        const regularEmployees = activeEmployees.length >= 3 ? activeEmployees.slice(0, -1) : activeEmployees;
+        
+        // Compact column widths to allow for wider spacing while preserving running totals
+        const shiftWidth = 16;  // More compact for "Shift X" 
+        const memberWidth = 28; // More compact since names are limited to 10 chars
+        const wildcardWidth = 16; // More compact for "Yes/No"
+        
+        // Calculate running totals width based on ultra-compact format: "A:9|B:9|C:9"
+        // Each member takes about 3-4 chars (letter + colon + digit + separator)
+        // Adding generous buffer to prevent truncation with longer data
+        const baseWidth = 50;
+        const perMemberWidth = regularEmployees.length <= 4 ? 4 : 5; // More space for more members
+        const buffer = regularEmployees.length * 2 + 10; // Dynamic buffer
+        const estimatedTotalsWidth = Math.max(baseWidth, regularEmployees.length * perMemberWidth + buffer);
+        
+        return [shiftWidth, memberWidth, memberWidth, wildcardWidth, estimatedTotalsWidth];
+      };
+      
+      const colWidths = calculateOptimalColumnWidths();
+      
+      // Clean header background without border
+      pdf.setFillColor(248, 250, 251); // Light gray background
+      pdf.rect(margin, currentY, contentWidth, 8, 'F');
+      
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      
+      let xPos = margin + 2; // Start with more margin
+      const columnSpacing = 3; // Add spacing between columns
+      headers.forEach((header, i) => {
+        pdf.text(header, xPos, currentY + 5.5);
+        xPos += colWidths[i] + columnSpacing; // Add spacing after each column
+      });
+      
+      currentY += 10; // Add more spacing after headers
+
+      // Table data
+      const activeEmployees = employees.filter(emp => emp.trim() !== '');
+      const hasWildcard = activeEmployees.length >= 3;
+      const wildcard = hasWildcard ? activeEmployees[activeEmployees.length - 1] : null;
+      const regularEmployees = hasWildcard ? activeEmployees.slice(0, -1) : activeEmployees;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+
+      // Helper function to add table headers on new pages
+      const addTableHeaders = () => {
+        pdf.setFillColor(248, 250, 251);
+        pdf.rect(margin, currentY, contentWidth, 8, 'F');
+        
+        pdf.setTextColor(colors.text);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        
+        let headerX = margin + 2; // Start with more margin
+        headers.forEach((header, i) => {
+          pdf.text(header, headerX, currentY + 5.5);
+          headerX += colWidths[i] + columnSpacing; // Add spacing after each column
+        });
+        
+        currentY += 10;
+      };
+
+      schedule.forEach((shift, index) => {
+        // Use standard row height since we're using compact formatting
+        let rowHeight = lineHeight;
+        
+        // Check if we need a new page and add headers if so
+        if (checkNewPage(rowHeight + 2)) {
+          addTableHeaders();
+        }
+
+        // Clean alternating row colors without borders
+        if (index % 2 === 1) {
+          pdf.setFillColor(252, 253, 254); // Very light gray
+          pdf.rect(margin, currentY, contentWidth, rowHeight, 'F');
+        }
+
+        // Calculate running counts
+        const runningCounts = {};
+        activeEmployees.forEach(emp => runningCounts[emp] = 0);
+        
+        schedule.slice(0, index + 1).forEach(s => {
+          s.shift.forEach(emp => {
+            if (runningCounts.hasOwnProperty(emp)) {
+              runningCounts[emp]++;
+            }
+          });
+        });
+
+        // Create ultra-compact balance string with assigned letters
+        const balanceText = regularEmployees.map(emp => {
+          const letter = memberLetters[emp] || emp.charAt(0).toUpperCase();
+          return `${letter}:${runningCounts[emp]}`;
+        }).join('|'); // Use single | without spaces for maximum compactness
+
+        // Row data with better formatting
+        pdf.setTextColor(colors.text);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'normal');
+        
+        let xPos = margin + 2; // Start with more margin
+        const rowData = [
+          `${shift.day}`,
+          shift.shift[0],
+          shift.shift[1],
+          shift.isWildcardUsed ? 'Yes' : 'No',
+          balanceText
+        ];
+
+        rowData.forEach((data, i) => {
+          let displayText = data;
+          const availableWidth = colWidths[i] - 2; // Leave small margin
+          
+          // Smart text fitting - only truncate if absolutely necessary
+          const textWidth = pdf.getTextWidth(displayText);
+          const maxWidth = availableWidth;
+          
+          if (textWidth > maxWidth) {
+            // For running totals column, use truncation if needed (already compact from balanceText)
+            if (i === 4) {
+              // The text is already in compact format like "AB:3|CD:2|EF:1"
+              // If still too long, truncate but try to keep complete entries
+              const maxChars = Math.floor(data.length * maxWidth / textWidth);
+              if (maxChars < data.length) {
+                // Try to truncate at a logical break point (after |)
+                const parts = data.split('|');
+                let truncated = '';
+                for (const part of parts) {
+                  if ((truncated + '|' + part).length <= maxChars - 3) {
+                    truncated += (truncated ? '|' : '') + part;
+                  } else {
+                    break;
+                  }
+                }
+                displayText = truncated + '...';
+              }
+            } else {
+              // For other columns, truncate gracefully
+              const maxChars = Math.floor(data.length * maxWidth / textWidth);
+              displayText = data.substring(0, Math.max(3, maxChars - 3)) + '...';
+            }
+          }
+          
+          pdf.text(displayText, xPos, currentY + 4);
+          xPos += colWidths[i] + columnSpacing; // Add spacing after each column
+        });
+
+        currentY += rowHeight;
+      });
+
+      // Add some spacing
+      currentY += 10;
+
+      // Statistics section
+      checkNewPage(60);
+      
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Statistics Summary', margin, currentY);
+      currentY += 15;
+
+      // Member statistics
+      const { employeeStats, shiftBalance } = getEmployeeStats();
+      
+      pdf.setFontSize(12);
+      pdf.text('Member Shift Counts:', margin, currentY);
+      currentY += 8;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      Object.entries(employeeStats).forEach(([emp, stats]) => {
+        checkNewPage(lineHeight);
+        
+        const isHelper = !stats.isRegular;
+        const text = `${emp}: ${stats.totalShifts} shifts (max consecutive: ${stats.maxConsecutive})${isHelper ? ' [Helper]' : ''}`;
+        
+        if (isHelper) {
+          pdf.setTextColor(colors.secondary);
+        } else {
+          pdf.setTextColor(colors.text);
+        }
+        
+        pdf.text(text, margin + 5, currentY);
+        currentY += lineHeight;
+      });
+
+      currentY += 5;
+
+      // Balance information
+      checkNewPage(20);
+      
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Balance Analysis:', margin, currentY);
+      currentY += 8;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      const balanceColor = shiftBalance.range <= 1 ? '#059669' : '#d97706';
+      const balanceText = shiftBalance.range <= 1 ? 'Well balanced!' : 'Could be more balanced';
+      
+      pdf.setTextColor(colors.text);
+      pdf.text(`Min shifts: ${shiftBalance.min}`, margin + 5, currentY);
+      currentY += lineHeight;
+      
+      pdf.text(`Max shifts: ${shiftBalance.max}`, margin + 5, currentY);
+      currentY += lineHeight;
+      
+      pdf.text(`Difference: ${shiftBalance.range} - ${balanceText}`, margin + 5, currentY);
+      currentY += 10;
+
+      // Pairing frequency
+      checkNewPage(40);
+      
+      pdf.setTextColor(colors.text);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Pairing Frequency:', margin, currentY);
+      currentY += 8;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      
+      const pairingStats = getPairingStats();
+      Object.entries(pairingStats).forEach(([pair, count]) => {
+        checkNewPage(lineHeight);
+        pdf.setTextColor(colors.text);
+        pdf.text(`${pair}: ${count} times`, margin + 5, currentY);
+        currentY += lineHeight;
+      });
+
+      // Footer
+      pdf.setTextColor(colors.secondary);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'italic');
+      const footerY = pdfHeight - 15;
+      pdf.text('Created by Mike Cheel - Shift Rotation Scheduler', pdfWidth / 2, footerY, { align: 'center' });
 
       // Generate filename with current local timestamp
-      const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
@@ -284,11 +416,39 @@ const ShiftScheduler = () => {
       alert('Please enter at least 2 member names to generate a schedule.');
       return;
     }
+
+    // Check for empty entries in the middle
+    const hasEmptyEntries = employees.some((emp, index) => {
+      // If this is an empty entry but there are non-empty entries after it
+      if (emp.trim() === '') {
+        const hasNonEmptyAfter = employees.slice(index + 1).some(laterEmp => laterEmp.trim() !== '');
+        return hasNonEmptyAfter;
+      }
+      return false;
+    });
+
+    if (hasEmptyEntries) {
+      alert('Please fill in all member names or use the Clear button to start over. Empty entries in the middle are not allowed.');
+      return;
+    }
+
+    // Auto-assign letters to members (A, B, C, etc.)
+    const letters = {};
+    const regularEmployees = activeEmployees.length >= 3 ? activeEmployees.slice(0, -1) : activeEmployees;
+    const wildcard = activeEmployees.length >= 3 ? activeEmployees[activeEmployees.length - 1] : null;
     
-    // Determine if we have a wildcard (need at least 3 total members for wildcard)
+    regularEmployees.forEach((member, index) => {
+      letters[member] = String.fromCharCode(65 + index); // A, B, C, D, etc.
+    });
+    
+    if (wildcard) {
+      letters[wildcard] = 'W'; // Wildcard gets 'W'
+    }
+    
+    setMemberLetters(letters);
+    
+    // Use the variables we already defined
     const hasWildcard = activeEmployees.length >= 3;
-    const wildcard = hasWildcard ? activeEmployees[activeEmployees.length - 1] : null;
-    const regularEmployees = hasWildcard ? activeEmployees.slice(0, -1) : activeEmployees;
     
     // For 2 total members, both are regular (no wildcard)
     // For 3+ members, last one is wildcard
@@ -595,9 +755,17 @@ const ShiftScheduler = () => {
   };
   
   const handleEmployeeNameChange = (index, newName) => {
+    // Limit member names to 10 characters for better PDF formatting
+    const limitedName = newName.slice(0, 10);
     const newEmployees = [...employees];
-    newEmployees[index] = newName;
+    newEmployees[index] = limitedName;
     setEmployees(newEmployees);
+  };
+
+  const clearMemberNames = () => {
+    setEmployees(['', '', '', '', '', '', '']);
+    setSchedule([]);
+    setMemberLetters({});
   };
   
   const getPairingStats = () => {
@@ -742,6 +910,146 @@ const ShiftScheduler = () => {
           animation: fadeIn 0.5s ease-in;
         }
 
+        .hamburger-menu {
+          display: none;
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          z-index: 20;
+          background: var(--card-bg);
+          border: 2px solid var(--border-color);
+          border-radius: 8px;
+          padding: 0.5rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .hamburger-menu:hover {
+          border-color: var(--accent-color);
+          box-shadow: 0 4px 8px var(--shadow);
+          transform: translateY(-1px);
+        }
+
+        .hamburger-icon {
+          width: 24px;
+          height: 24px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .hamburger-line {
+          width: 18px;
+          height: 2px;
+          background: var(--text-color);
+          border-radius: 1px;
+          transition: all 0.3s ease;
+        }
+
+        .hamburger-menu.open .hamburger-line:nth-child(1) {
+          transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-menu.open .hamburger-line:nth-child(2) {
+          opacity: 0;
+        }
+
+        .hamburger-menu.open .hamburger-line:nth-child(3) {
+          transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        .mobile-menu {
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 280px;
+          height: 100vh;
+          background: var(--card-bg);
+          border-left: 1px solid var(--border-color);
+          transform: translateX(100%);
+          transition: transform 0.3s ease;
+          z-index: 15;
+          display: flex;
+          flex-direction: column;
+          padding: 80px 20px 20px;
+          box-shadow: -4px 0 20px var(--shadow);
+        }
+
+        .mobile-menu.open {
+          transform: translateX(0);
+        }
+
+        .mobile-menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 14;
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .mobile-menu-overlay.open {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .mobile-menu-item {
+          margin-bottom: 1.5rem;
+        }
+
+        .mobile-menu-label {
+          display: block;
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--text-color);
+          margin-bottom: 0.5rem;
+        }
+
+        .mobile-menu .style-selector {
+          width: 100%;
+          margin-bottom: 0;
+        }
+
+        .mobile-menu .theme-toggle {
+          width: 100%;
+          max-width: none;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          position: relative;
+          border-radius: 12px;
+          height: auto;
+        }
+
+        .mobile-menu .theme-toggle-slider {
+          position: static;
+          transform: none !important;
+          margin-left: 1rem;
+          width: 28px;
+          height: 28px;
+          flex-shrink: 0;
+        }
+
+        .mobile-menu .theme-toggle span {
+          flex: 1;
+          text-align: left;
+          font-size: 0.9rem;
+          color: var(--text-color);
+          font-weight: 500;
+        }
+
+        .mobile-menu [data-theme="dark"] .theme-toggle-slider {
+          transform: none !important;
+          background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
@@ -845,7 +1153,9 @@ const ShiftScheduler = () => {
 
         /* Glassmorphism styles */
         [data-style="glassmorphism"] .style-selector,
-        [data-style="glassmorphism"] .theme-toggle {
+        [data-style="glassmorphism"] .theme-toggle,
+        [data-style="glassmorphism"] .hamburger-menu,
+        [data-style="glassmorphism"] .mobile-menu {
           background: rgba(255, 255, 255, 0.15) !important;
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -853,21 +1163,25 @@ const ShiftScheduler = () => {
         }
 
         [data-style="glassmorphism"] .style-selector:hover,
-        [data-style="glassmorphism"] .theme-toggle:hover {
+        [data-style="glassmorphism"] .theme-toggle:hover,
+        [data-style="glassmorphism"] .hamburger-menu:hover {
           background: rgba(255, 255, 255, 0.25) !important;
           border: 1px solid rgba(255, 255, 255, 0.4) !important;
           box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
         }
 
         [data-style="glassmorphism"][data-theme="dark"] .style-selector,
-        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle {
+        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle,
+        [data-style="glassmorphism"][data-theme="dark"] .hamburger-menu,
+        [data-style="glassmorphism"][data-theme="dark"] .mobile-menu {
           background: rgba(30, 41, 59, 0.4) !important;
           border: 1px solid rgba(255, 255, 255, 0.2) !important;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
         }
 
         [data-style="glassmorphism"][data-theme="dark"] .style-selector:hover,
-        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle:hover {
+        [data-style="glassmorphism"][data-theme="dark"] .theme-toggle:hover,
+        [data-style="glassmorphism"][data-theme="dark"] .hamburger-menu:hover {
           background: rgba(30, 41, 59, 0.6) !important;
           border: 1px solid rgba(255, 255, 255, 0.3) !important;
           box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
@@ -875,38 +1189,46 @@ const ShiftScheduler = () => {
 
         /* Neumorphism styles */
         [data-style="neumorphism"] .style-selector,
-        [data-style="neumorphism"] .theme-toggle {
+        [data-style="neumorphism"] .theme-toggle,
+        [data-style="neumorphism"] .hamburger-menu,
+        [data-style="neumorphism"] .mobile-menu {
           background: #e0e5ec !important;
           box-shadow: 9px 9px 18px #c8cdd4, -9px -9px 18px #f8fdff !important;
           border: none !important;
         }
 
         [data-style="neumorphism"] .style-selector:hover,
-        [data-style="neumorphism"] .theme-toggle:hover {
+        [data-style="neumorphism"] .theme-toggle:hover,
+        [data-style="neumorphism"] .hamburger-menu:hover {
           box-shadow: 6px 6px 12px #c8cdd4, -6px -6px 12px #f8fdff !important;
           transform: translateY(-2px);
         }
 
         [data-style="neumorphism"] .style-selector:active,
-        [data-style="neumorphism"] .theme-toggle:active {
+        [data-style="neumorphism"] .theme-toggle:active,
+        [data-style="neumorphism"] .hamburger-menu:active {
           box-shadow: inset 4px 4px 8px #c8cdd4, inset -4px -4px 8px #f8fdff !important;
           transform: translateY(0);
         }
 
         [data-style="neumorphism"][data-theme="dark"] .style-selector,
-        [data-style="neumorphism"][data-theme="dark"] .theme-toggle {
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle,
+        [data-style="neumorphism"][data-theme="dark"] .hamburger-menu,
+        [data-style="neumorphism"][data-theme="dark"] .mobile-menu {
           background: #2d3748 !important;
           box-shadow: 9px 9px 18px #1e2730, -9px -9px 18px #3c4760 !important;
         }
 
         [data-style="neumorphism"][data-theme="dark"] .style-selector:hover,
-        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:hover {
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:hover,
+        [data-style="neumorphism"][data-theme="dark"] .hamburger-menu:hover {
           box-shadow: 6px 6px 12px #1e2730, -6px -6px 12px #3c4760 !important;
           transform: translateY(-2px);
         }
 
         [data-style="neumorphism"][data-theme="dark"] .style-selector:active,
-        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:active {
+        [data-style="neumorphism"][data-theme="dark"] .theme-toggle:active,
+        [data-style="neumorphism"][data-theme="dark"] .hamburger-menu:active {
           box-shadow: inset 4px 4px 8px #1e2730, inset -4px -4px 8px #3c4760 !important;
           transform: translateY(0);
         }
@@ -1208,36 +1530,13 @@ const ShiftScheduler = () => {
             margin: 0 !important;
           }
           
-          /* Header controls mobile layout */
+          /* Hide desktop header controls and show hamburger menu on mobile */
           .header-controls {
-            position: relative !important;
-            top: auto !important;
-            right: auto !important;
+            display: none !important;
+          }
+
+          .hamburger-menu {
             display: flex !important;
-            justify-content: center !important;
-            margin-bottom: 1rem !important;
-            gap: 0.75rem !important;
-          }
-          
-          .style-selector {
-            min-width: 120px !important;
-            font-size: 0.8rem !important;
-            padding: 0.6rem 0.8rem !important;
-          }
-          
-          .theme-toggle {
-            width: 60px !important;
-            height: 32px !important;
-          }
-          
-          .theme-toggle-slider {
-            width: 24px !important;
-            height: 24px !important;
-            font-size: 12px !important;
-          }
-          
-          [data-theme="dark"] .theme-toggle-slider {
-            transform: translateX(26px) !important;
           }
           
           /* Title spacing */
@@ -1468,7 +1767,12 @@ const ShiftScheduler = () => {
           .print-section,
           .credit-section,
           .footer,
-          .generate-btn {
+          .generate-btn,
+          .clear-btn,
+          .button-container,
+          .hamburger-menu,
+          .mobile-menu,
+          .mobile-menu-overlay {
             display: none !important;
           }
           
@@ -1497,6 +1801,16 @@ const ShiftScheduler = () => {
             break-inside: avoid !important;
           }
 
+          /* Better table row handling */
+          .schedule-table tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .schedule-table thead {
+            display: table-header-group !important;
+          }
+
           .pairing-frequency {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
@@ -1508,6 +1822,19 @@ const ShiftScheduler = () => {
           .stats-card h3 {
             page-break-after: avoid !important;
             break-after: avoid !important;
+          }
+
+          /* Improve spacing for better page breaks */
+          .schedule-table,
+          .stats-card {
+            margin-bottom: 20px !important;
+          }
+
+          /* Prevent widows and orphans */
+          .stats-card p,
+          .stats-card div {
+            orphans: 3 !important;
+            widows: 3 !important;
           }
 
           /* Force backgrounds to print */
@@ -1525,6 +1852,7 @@ const ShiftScheduler = () => {
         alignItems: 'flex-start',
         position: 'relative'
       }}>
+        {/* Desktop header controls */}
         <div className="header-controls">
           <select 
             className="style-selector" 
@@ -1544,6 +1872,76 @@ const ShiftScheduler = () => {
               {theme === 'light' ? '☀️' : '🌙'}
             </div>
           </button>
+        </div>
+
+        {/* Mobile hamburger menu */}
+        <div className={`hamburger-menu ${isMobileMenuOpen ? 'open' : ''}`} onClick={toggleMobileMenu}>
+          <div className="hamburger-icon">
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
+            <div className="hamburger-line"></div>
+          </div>
+        </div>
+
+        {/* Mobile menu overlay */}
+        <div 
+          className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}
+          onClick={toggleMobileMenu}
+        ></div>
+
+        {/* Mobile sliding menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-item">
+            <label className="mobile-menu-label">Visual Style</label>
+            <select 
+              className="style-selector" 
+              value={style} 
+              onChange={handleStyleChange}
+            >
+              <option value="default">Default</option>
+              <option value="glassmorphism">Glassmorphism</option>
+              <option value="neumorphism">Neumorphism</option>
+            </select>
+          </div>
+          <div className="mobile-menu-item">
+            <label className="mobile-menu-label">Theme</label>
+            <button 
+              className="theme-toggle" 
+              onClick={handleThemeToggle}
+              aria-label="Toggle theme"
+            >
+              <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+              <div className="theme-toggle-slider">
+                {theme === 'light' ? '☀️' : '🌙'}
+              </div>
+            </button>
+          </div>
+          <div className="mobile-menu-item">
+            <label className="mobile-menu-label">PDF Download</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <input 
+                type="checkbox" 
+                id="enablePdfMobile" 
+                checked={enablePdfDownload} 
+                onChange={handlePdfToggle}
+                style={{ 
+                  accentColor: 'var(--accent-color)',
+                  cursor: 'pointer'
+                }}
+              />
+              <label 
+                htmlFor="enablePdfMobile" 
+                style={{ 
+                  cursor: 'pointer',
+                  color: 'var(--text-color)',
+                  userSelect: 'none',
+                  fontSize: '0.85rem'
+                }}
+              >
+                Enable (experimental)
+              </label>
+            </div>
+          </div>
         </div>
         
         <div className="main-card" style={{
@@ -1581,12 +1979,22 @@ const ShiftScheduler = () => {
                 transition: 'color 0.3s ease'
               }}>
                 {index === 6 ? 'Wildcard Member:' : `Member ${index + 1}:`}
+                <span style={{ 
+                  fontSize: '0.75rem', 
+                  color: 'var(--text-muted)', 
+                  fontWeight: 'normal',
+                  marginLeft: '0.5rem'
+                }}>
+                  (max 10 chars)
+                </span>
               </label>
               <input
                 className="member-input"
                 type="text"
                 value={emp}
+                maxLength={10}
                 onChange={(e) => handleEmployeeNameChange(index, e.target.value)}
+                placeholder={index === 6 ? "Wildcard" : `Member ${index + 1}`}
                 style={{ 
                   width: '100%', 
                   padding: '0.5rem', 
@@ -1614,43 +2022,135 @@ const ShiftScheduler = () => {
             <li style={{ marginBottom: '0.5rem' }}>• Focus on completing pairing rounds efficiently</li>
           </ul>
           
-          <button
-            className="generate-btn"
-            onClick={generateSchedule}
-            style={{ 
-              marginTop: '1rem', 
-              width: '100%', 
-              backgroundColor: 'var(--accent-color)', 
-              color: 'white', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '0.375rem',
-              border: 'none',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s ease'
-            }}
-            onMouseOver={(e) => e.target.style.backgroundColor = 'var(--accent-hover)'}
-            onMouseOut={(e) => e.target.style.backgroundColor = 'var(--accent-color)'}
-          >
-            Generate Schedule
-          </button>
+          <div className="button-container" style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+            <button
+              className="generate-btn"
+              onClick={generateSchedule}
+              style={{ 
+                flex: 1,
+                backgroundColor: 'var(--accent-color)', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.375rem',
+                border: 'none',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s ease'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'var(--accent-hover)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'var(--accent-color)'}
+            >
+              Generate Schedule
+            </button>
+            <button
+              className="clear-btn"
+              onClick={clearMemberNames}
+              style={{ 
+                backgroundColor: '#dc2626', 
+                color: 'white', 
+                padding: '0.5rem 1rem', 
+                borderRadius: '0.375rem',
+                border: 'none',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s ease',
+                minWidth: '80px'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#b91c1c'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#dc2626'}
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </div>
 
       {schedule.length > 0 && (
         <>
+          {/* Member Legend */}
+          <div className="stats-card" style={{ marginBottom: '1.5rem' }}>
+            <h3>Member Legend</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
+              {Object.entries(memberLetters).map(([member, letter]) => (
+                <div key={member} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.5rem',
+                  padding: '0.25rem',
+                  backgroundColor: 'var(--tier-bg)',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem'
+                }}>
+                  <span style={{ 
+                    fontWeight: 'bold', 
+                    color: 'var(--accent-color)',
+                    minWidth: '20px',
+                    textAlign: 'center'
+                  }}>
+                    {letter}:
+                  </span>
+                  <span style={{ color: 'var(--text-color)' }}>
+                    {member}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div style={{ 
+              fontSize: '0.75rem', 
+              color: 'var(--text-muted)', 
+              marginTop: '0.5rem',
+              fontStyle: 'italic'
+            }}>
+              💡 Running totals in the schedule use these letters for compact display
+            </div>
+          </div>
+
           <div className="print-section">
             <h3>Print & Export</h3>
+            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+              <input 
+                type="checkbox" 
+                id="enablePdf" 
+                checked={enablePdfDownload} 
+                onChange={handlePdfToggle}
+                style={{ 
+                  accentColor: 'var(--accent-color)',
+                  cursor: 'pointer'
+                }}
+              />
+              <label 
+                htmlFor="enablePdf" 
+                style={{ 
+                  cursor: 'pointer',
+                  color: 'var(--text-color)',
+                  userSelect: 'none'
+                }}
+              >
+                Enable PDF Download (experimental - may have formatting issues)
+              </label>
+            </div>
             <div className="print-buttons">
               <button className="print-btn" onClick={handlePrint}>
                 <span className="print-btn-icon">🖨️</span>
                 Print Schedule
               </button>
-              <button className="print-btn" onClick={handleDownloadPDF}>
-                <span className="print-btn-icon">📄</span>
-                Download PDF
-              </button>
+              {enablePdfDownload && (
+                <button className="print-btn" onClick={handleDownloadPDF}>
+                  <span className="print-btn-icon">📄</span>
+                  Download PDF
+                </button>
+              )}
             </div>
+            {!enablePdfDownload && (
+              <div style={{ 
+                fontSize: '0.8rem', 
+                color: 'var(--text-muted)', 
+                marginTop: '0.5rem',
+                fontStyle: 'italic'
+              }}>
+                💡 Tip: Use the Print button for better formatting. Most browsers can save as PDF from the print dialog.
+              </div>
+            )}
           </div>
 
           <div className="schedule-table">
@@ -1705,8 +2205,8 @@ const ShiftScheduler = () => {
                         </td>
                         <td className="schedule-table" style={{ fontSize: '0.75rem' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                            <div>{regularEmployees.map((emp, i) => `${emp}: ${regularCounts[i]}`).join(' | ')}</div>
-                            {hasWildcard && wildcardCount > 0 && <div style={{ color: 'var(--accent-color)' }}>{wildcard}: {wildcardCount}</div>}
+                            <div>{regularEmployees.map((emp, i) => `${memberLetters[emp] || emp.charAt(0)}:${regularCounts[i]}`).join('|')}</div>
+                            {hasWildcard && wildcardCount > 0 && <div style={{ color: 'var(--accent-color)' }}>W:{wildcardCount}</div>}
                           </div>
                         </td>
                       </tr>
@@ -1771,7 +2271,7 @@ const ShiftScheduler = () => {
       <div className="footer">
         <div className="footer-content">
           <div className="timestamp">
-            Last Updated: Saturday, August 17, 2025 at 8:04:00 AM EDT
+            Last Updated: Saturday, August 17, 2025 at 1:10:00 PM EDT
           </div>
           <div className="claude-credit">
             🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
