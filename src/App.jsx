@@ -43,7 +43,7 @@ const ShiftScheduler = () => {
 
       console.log('Starting PDF generation...');
 
-      // Create a container with only the content we want
+      // Create a container that matches the print layout
       const contentContainer = document.createElement('div');
       contentContainer.style.position = 'fixed';
       contentContainer.style.left = '0';
@@ -51,15 +51,18 @@ const ShiftScheduler = () => {
       contentContainer.style.width = '210mm';
       contentContainer.style.minHeight = '297mm';
       contentContainer.style.backgroundColor = '#ffffff';
-      contentContainer.style.padding = '20mm';
+      contentContainer.style.padding = '15mm';
       contentContainer.style.boxSizing = 'border-box';
       contentContainer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
       contentContainer.style.color = '#000000';
       contentContainer.style.lineHeight = '1.5';
       contentContainer.style.zIndex = '10000';
       contentContainer.style.overflow = 'visible';
+      // Apply print-like styling
+      contentContainer.style.margin = '0';
+      contentContainer.style.boxShadow = 'none';
 
-      // Get the content elements
+      // Get only the printable content elements (matching @media print styles)
       const titleElement = document.querySelector('.main-title');
       const scheduleElement = document.querySelector('.schedule-table');
       const statsElement = document.querySelector('.stats-grid');
@@ -79,38 +82,41 @@ const ShiftScheduler = () => {
       titleClone.style.lineHeight = '1.3';
       contentContainer.appendChild(titleClone);
 
-      // Clone and add schedule table
+      // Clone and add schedule table (matching print styles)
       const scheduleClone = scheduleElement.cloneNode(true);
       scheduleClone.style.width = '100%';
       scheduleClone.style.marginBottom = '20px';
       scheduleClone.style.border = '1px solid #ddd';
-      scheduleClone.style.borderRadius = '8px';
-      scheduleClone.style.overflow = 'hidden';
+      scheduleClone.style.borderRadius = '0'; // Print version has no border radius
+      scheduleClone.style.overflow = 'visible';
       scheduleClone.style.backgroundColor = 'white';
+      scheduleClone.style.boxShadow = 'none'; // Print version has no shadow
+      scheduleClone.style.pageBreakInside = 'avoid';
       
-      // Style table elements
+      // Style table elements to match print version
       const tables = scheduleClone.querySelectorAll('table');
       tables.forEach(table => {
         table.style.width = '100%';
         table.style.borderCollapse = 'collapse';
+        table.style.pageBreakInside = 'avoid';
       });
       
       const ths = scheduleClone.querySelectorAll('th');
       ths.forEach(th => {
         th.style.backgroundColor = '#f5f5f5';
-        th.style.padding = '14px 10px';
-        th.style.border = '1px solid #000';
+        th.style.padding = '12px 8px';
+        th.style.border = '1px solid #333';
         th.style.fontWeight = '700';
-        th.style.fontSize = '16px';
+        th.style.fontSize = '14px';
         th.style.color = '#000';
         th.style.lineHeight = '1.4';
       });
       
       const tds = scheduleClone.querySelectorAll('td');
       tds.forEach(td => {
-        td.style.padding = '12px 10px';
-        td.style.border = '1px solid #000';
-        td.style.fontSize = '15px';
+        td.style.padding = '10px 8px';
+        td.style.border = '1px solid #333';
+        td.style.fontSize = '13px';
         td.style.color = '#000';
         td.style.backgroundColor = 'white';
         td.style.lineHeight = '1.4';
@@ -118,35 +124,49 @@ const ShiftScheduler = () => {
       
       contentContainer.appendChild(scheduleClone);
 
-      // Clone and add stats
+      // Clone and add stats (matching print styles)
       const statsClone = statsElement.cloneNode(true);
       statsClone.style.display = 'block';
+      statsClone.style.pageBreakInside = 'avoid';
       
       const statsCards = statsClone.querySelectorAll('.stats-card');
       statsCards.forEach((card, index) => {
-        card.style.border = '1px solid #ddd';
-        card.style.borderRadius = '8px';
-        card.style.padding = '16px';
-        card.style.marginBottom = '16px';
+        card.style.border = '1px solid #333';
+        card.style.borderRadius = '0'; // Print version has no border radius
+        card.style.padding = '14px';
+        card.style.marginBottom = '14px';
         card.style.backgroundColor = 'white';
         card.style.width = '100%';
         card.style.boxSizing = 'border-box';
+        card.style.boxShadow = 'none'; // Print version has no shadow
+        card.style.pageBreakInside = 'avoid';
         
         const h3s = card.querySelectorAll('h3');
         h3s.forEach(h3 => {
-          h3.style.fontSize = '20px';
+          h3.style.fontSize = '18px';
           h3.style.fontWeight = '700';
-          h3.style.marginBottom = '15px';
+          h3.style.marginBottom = '12px';
           h3.style.color = '#000';
           h3.style.lineHeight = '1.3';
+          h3.style.pageBreakAfter = 'avoid';
         });
         
         const divs = card.querySelectorAll('div');
         divs.forEach(div => {
           div.style.color = '#000';
-          div.style.fontSize = '15px';
+          div.style.fontSize = '13px';
           div.style.lineHeight = '1.4';
         });
+        
+        // Style pairing frequency sections specifically
+        const pairingFreq = card.querySelector('.pairing-frequency');
+        if (pairingFreq) {
+          pairingFreq.style.pageBreakInside = 'avoid';
+          pairingFreq.style.maxHeight = 'none';
+          pairingFreq.style.overflow = 'visible';
+          pairingFreq.style.border = '1px solid #ddd';
+          pairingFreq.style.borderRadius = '0';
+        }
       });
       
       contentContainer.appendChild(statsClone);
