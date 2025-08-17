@@ -11,6 +11,7 @@ const ShiftScheduler = () => {
   ]);
   const [schedule, setSchedule] = useState([]);
   const [currentDay, setCurrentDay] = useState(1);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
@@ -45,15 +46,19 @@ const ShiftScheduler = () => {
 
       // Create a container with only the content we want
       const contentContainer = document.createElement('div');
-      contentContainer.style.position = 'absolute';
-      contentContainer.style.left = '-9999px';
+      contentContainer.style.position = 'fixed';
+      contentContainer.style.left = '0';
       contentContainer.style.top = '0';
-      contentContainer.style.width = '1000px';
-      contentContainer.style.backgroundColor = 'white';
-      contentContainer.style.padding = '30px';
-      contentContainer.style.fontFamily = 'system-ui, Avenir, Helvetica, Arial, sans-serif';
-      contentContainer.style.color = '#333';
+      contentContainer.style.width = '210mm';
+      contentContainer.style.minHeight = '297mm';
+      contentContainer.style.backgroundColor = '#ffffff';
+      contentContainer.style.padding = '20mm';
+      contentContainer.style.boxSizing = 'border-box';
+      contentContainer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
+      contentContainer.style.color = '#000000';
       contentContainer.style.lineHeight = '1.5';
+      contentContainer.style.zIndex = '10000';
+      contentContainer.style.overflow = 'visible';
 
       // Get the content elements
       const titleElement = document.querySelector('.main-title');
@@ -150,19 +155,23 @@ const ShiftScheduler = () => {
       // Add container to body temporarily
       document.body.appendChild(contentContainer);
 
-      // Wait for styles to apply
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait for styles to apply and content to render
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Generate PDF
+      // Generate PDF with improved settings
       const canvas = await html2canvas(contentContainer, {
-        scale: 3,
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        pixelRatio: 3,
+        pixelRatio: 2,
         letterRendering: true,
-        foreignObjectRendering: true
+        foreignObjectRendering: false,
+        width: contentContainer.scrollWidth,
+        height: contentContainer.scrollHeight,
+        scrollX: 0,
+        scrollY: 0
       });
 
       // Remove temporary container
@@ -1750,7 +1759,7 @@ const ShiftScheduler = () => {
           <div className="footer">
             <div className="footer-content">
               <div className="timestamp">
-                Last updated: {getCurrentESTDateTime()}
+                {lastUpdated ? `Last updated: ${lastUpdated}` : 'No schedule generated yet'}
               </div>
               <div className="claude-credit">
                 🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
