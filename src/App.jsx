@@ -11,7 +11,6 @@ const ShiftScheduler = () => {
   ]);
   const [schedule, setSchedule] = useState([]);
   const [currentDay, setCurrentDay] = useState(1);
-  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
@@ -177,11 +176,11 @@ const ShiftScheduler = () => {
       // Remove temporary container
       document.body.removeChild(contentContainer);
 
-      // Create PDF
+      // Create PDF with better page handling
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 15;
       const availableWidth = pdfWidth - (margin * 2);
       const availableHeight = pdfHeight - (margin * 2);
 
@@ -190,9 +189,14 @@ const ShiftScheduler = () => {
       const imgData = canvas.toDataURL('image/png', 1.0);
 
       if (imgHeight <= availableHeight) {
+        // Content fits on one page
         pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       } else {
-        // Split across pages
+        // Content needs multiple pages - use overlap to prevent cutting
+        const overlap = 10; // mm of overlap to prevent cutting content
+        const pageHeightInPixels = (availableHeight / imgWidth) * canvas.width;
+        const overlapInPixels = (overlap / imgWidth) * canvas.width;
+        
         let currentY = 0;
         let pageCount = 0;
 
@@ -201,16 +205,27 @@ const ShiftScheduler = () => {
             pdf.addPage();
           }
 
-          const sourceHeight = Math.min(
-            (availableHeight / imgWidth) * canvas.width,
-            canvas.height - currentY
-          );
+          // Calculate the height for this page with overlap consideration
+          let sourceHeight;
+          if (currentY + pageHeightInPixels >= canvas.height) {
+            // Last page - take remaining content
+            sourceHeight = canvas.height - currentY;
+          } else {
+            // Not last page - add overlap to prevent cutting
+            sourceHeight = Math.min(pageHeightInPixels + overlapInPixels, canvas.height - currentY);
+          }
 
+          // Create canvas for this page
           const pageCanvas = document.createElement('canvas');
           pageCanvas.width = canvas.width;
           pageCanvas.height = sourceHeight;
           const pageCtx = pageCanvas.getContext('2d');
           
+          // Fill with white background
+          pageCtx.fillStyle = '#ffffff';
+          pageCtx.fillRect(0, 0, canvas.width, sourceHeight);
+          
+          // Draw the content
           pageCtx.drawImage(
             canvas,
             0, currentY, canvas.width, sourceHeight,
@@ -220,9 +235,17 @@ const ShiftScheduler = () => {
           const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
           const actualHeight = (sourceHeight * imgWidth) / canvas.width;
           
-          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, actualHeight);
+          // Ensure the image fits within page bounds
+          const finalHeight = Math.min(actualHeight, availableHeight);
+          
+          pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, finalHeight);
 
-          currentY += sourceHeight;
+          // Move to next section with overlap consideration
+          if (currentY + pageHeightInPixels >= canvas.height) {
+            break; // We're done
+          } else {
+            currentY += pageHeightInPixels - (overlapInPixels / 2); // Overlap by half to ensure no gaps
+          }
           pageCount++;
         }
       }
@@ -1749,26 +1772,26 @@ const ShiftScheduler = () => {
         </>
       )}
 
-          {/* Credit Section */}
-          <div className="credit-section">
-            <h4>Created by Mike Cheel</h4>
-            <p>Shift Rotation Scheduler - Designed for fair and efficient team scheduling</p>
-          </div>
+      {/* Credit Section */}
+      <div className="credit-section">
+        <h4>Created by Mike Cheel</h4>
+        <p>Shift Rotation Scheduler - Designed for fair and efficient team scheduling</p>
+      </div>
 
-          {/* Footer */}
-          <div className="footer">
-            <div className="footer-content">
-              <div className="timestamp">
-                {lastUpdated ? `Last updated: ${lastUpdated}` : 'No schedule generated yet'}
-              </div>
-              <div className="claude-credit">
-                🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
-              </div>
-              <div className="claude-credit">
-                Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;
-              </div>
-            </div>
+      {/* Footer */}
+      <div className="footer">
+        <div className="footer-content">
+          <div className="timestamp">
+            Last Updated: Saturday, August 17, 2025 at 7:47:00 AM EDT
           </div>
+          <div className="claude-credit">
+            🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
+          </div>
+          <div className="claude-credit">
+            Co-Authored-By: Claude &lt;noreply@anthropic.com&gt;
+          </div>
+        </div>
+      </div>
         </div>
       </div>
     </>
