@@ -43,141 +43,103 @@ const ShiftScheduler = () => {
 
       console.log('Starting PDF generation...');
 
-      // Create a container that matches the print layout
-      const contentContainer = document.createElement('div');
+      // Temporarily apply print media styles to capture exact print appearance
+      const originalMediaType = document.documentElement.style.getPropertyValue('--media-type');
+      
+      // Create a style element to force print styles
+      const printStyleElement = document.createElement('style');
+      printStyleElement.textContent = `
+        @media screen {
+          .header-controls,
+          .print-section,
+          .credit-section,
+          .footer,
+          .generate-btn {
+            display: none !important;
+          }
+          
+          .main-card {
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 1rem !important;
+            background: white !important;
+          }
+          
+          .schedule-table,
+          .stats-card {
+            box-shadow: none !important;
+            background: white !important;
+          }
+          
+          .schedule-table th,
+          .schedule-table td {
+            border: 1px solid var(--border-color) !important;
+          }
+          
+          .schedule-table,
+          .stats-grid,
+          .stats-card {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          .pairing-frequency {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          .stats-card h3 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+          }
+
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+        }
+      `;
+      document.head.appendChild(printStyleElement);
+
+      // Create a container that captures the main content area
+      const mainCard = document.querySelector('.main-card');
+      if (!mainCard) {
+        alert('Unable to find main content area.');
+        return;
+      }
+
+      // Clone the main card to avoid modifying the original
+      const contentContainer = mainCard.cloneNode(true);
+      
+      // Position the container for capture
       contentContainer.style.position = 'fixed';
       contentContainer.style.left = '0';
       contentContainer.style.top = '0';
       contentContainer.style.width = '210mm';
-      contentContainer.style.minHeight = '297mm';
+      contentContainer.style.minHeight = 'auto';
+      contentContainer.style.maxWidth = '210mm';
       contentContainer.style.backgroundColor = '#ffffff';
+      contentContainer.style.margin = '0';
       contentContainer.style.padding = '15mm';
       contentContainer.style.boxSizing = 'border-box';
-      contentContainer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
-      contentContainer.style.color = '#000000';
-      contentContainer.style.lineHeight = '1.5';
       contentContainer.style.zIndex = '10000';
       contentContainer.style.overflow = 'visible';
-      // Apply print-like styling
-      contentContainer.style.margin = '0';
       contentContainer.style.boxShadow = 'none';
+      contentContainer.style.borderRadius = '0';
 
-      // Get only the printable content elements (matching @media print styles)
-      const titleElement = document.querySelector('.main-title');
-      const scheduleElement = document.querySelector('.schedule-table');
-      const statsElement = document.querySelector('.stats-grid');
-
-      if (!titleElement || !scheduleElement || !statsElement) {
-        alert('Unable to find schedule content. Please ensure a schedule is generated.');
-        return;
-      }
-
-      // Clone and add title
-      const titleClone = titleElement.cloneNode(true);
-      titleClone.style.fontSize = '28px';
-      titleClone.style.fontWeight = 'bold';
-      titleClone.style.marginBottom = '25px';
-      titleClone.style.textAlign = 'center';
-      titleClone.style.color = '#000';
-      titleClone.style.lineHeight = '1.3';
-      contentContainer.appendChild(titleClone);
-
-      // Clone and add schedule table (matching print styles)
-      const scheduleClone = scheduleElement.cloneNode(true);
-      scheduleClone.style.width = '100%';
-      scheduleClone.style.marginBottom = '20px';
-      scheduleClone.style.border = '1px solid #ddd';
-      scheduleClone.style.borderRadius = '0'; // Print version has no border radius
-      scheduleClone.style.overflow = 'visible';
-      scheduleClone.style.backgroundColor = 'white';
-      scheduleClone.style.boxShadow = 'none'; // Print version has no shadow
-      scheduleClone.style.pageBreakInside = 'avoid';
-      
-      // Style table elements to match print version
-      const tables = scheduleClone.querySelectorAll('table');
-      tables.forEach(table => {
-        table.style.width = '100%';
-        table.style.borderCollapse = 'collapse';
-        table.style.pageBreakInside = 'avoid';
-      });
-      
-      const ths = scheduleClone.querySelectorAll('th');
-      ths.forEach(th => {
-        th.style.backgroundColor = '#f5f5f5';
-        th.style.padding = '12px 8px';
-        th.style.border = '1px solid #333';
-        th.style.fontWeight = '700';
-        th.style.fontSize = '14px';
-        th.style.color = '#000';
-        th.style.lineHeight = '1.4';
-      });
-      
-      const tds = scheduleClone.querySelectorAll('td');
-      tds.forEach(td => {
-        td.style.padding = '10px 8px';
-        td.style.border = '1px solid #333';
-        td.style.fontSize = '13px';
-        td.style.color = '#000';
-        td.style.backgroundColor = 'white';
-        td.style.lineHeight = '1.4';
-      });
-      
-      contentContainer.appendChild(scheduleClone);
-
-      // Clone and add stats (matching print styles)
-      const statsClone = statsElement.cloneNode(true);
-      statsClone.style.display = 'block';
-      statsClone.style.pageBreakInside = 'avoid';
-      
-      const statsCards = statsClone.querySelectorAll('.stats-card');
-      statsCards.forEach((card, index) => {
-        card.style.border = '1px solid #333';
-        card.style.borderRadius = '0'; // Print version has no border radius
-        card.style.padding = '14px';
-        card.style.marginBottom = '14px';
-        card.style.backgroundColor = 'white';
-        card.style.width = '100%';
-        card.style.boxSizing = 'border-box';
-        card.style.boxShadow = 'none'; // Print version has no shadow
-        card.style.pageBreakInside = 'avoid';
-        
-        const h3s = card.querySelectorAll('h3');
-        h3s.forEach(h3 => {
-          h3.style.fontSize = '18px';
-          h3.style.fontWeight = '700';
-          h3.style.marginBottom = '12px';
-          h3.style.color = '#000';
-          h3.style.lineHeight = '1.3';
-          h3.style.pageBreakAfter = 'avoid';
-        });
-        
-        const divs = card.querySelectorAll('div');
-        divs.forEach(div => {
-          div.style.color = '#000';
-          div.style.fontSize = '13px';
-          div.style.lineHeight = '1.4';
-        });
-        
-        // Style pairing frequency sections specifically
-        const pairingFreq = card.querySelector('.pairing-frequency');
-        if (pairingFreq) {
-          pairingFreq.style.pageBreakInside = 'avoid';
-          pairingFreq.style.maxHeight = 'none';
-          pairingFreq.style.overflow = 'visible';
-          pairingFreq.style.border = '1px solid #ddd';
-          pairingFreq.style.borderRadius = '0';
-        }
-      });
-      
-      contentContainer.appendChild(statsClone);
+      // Remove elements that shouldn't appear in PDF (matching print styles)
+      const elementsToRemove = contentContainer.querySelectorAll('.header-controls, .print-section, .credit-section, .footer, .generate-btn');
+      elementsToRemove.forEach(el => el.remove());
 
       // Add container to body temporarily
       document.body.appendChild(contentContainer);
 
-      // Wait for styles to apply and content to render
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for styles to apply and fonts to load
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Generate PDF with improved settings
+      // Generate PDF with settings optimized for print matching
       const canvas = await html2canvas(contentContainer, {
         scale: 2,
         useCORS: true,
@@ -190,17 +152,24 @@ const ShiftScheduler = () => {
         width: contentContainer.scrollWidth,
         height: contentContainer.scrollHeight,
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        onclone: function(clonedDoc) {
+          // Ensure print styles are applied in the clone
+          const clonedPrintStyle = clonedDoc.createElement('style');
+          clonedPrintStyle.textContent = printStyleElement.textContent;
+          clonedDoc.head.appendChild(clonedPrintStyle);
+        }
       });
 
-      // Remove temporary container
+      // Clean up
       document.body.removeChild(contentContainer);
+      document.head.removeChild(printStyleElement);
 
       // Create PDF with better page handling
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
+      const margin = 10; // Reduced margin to match print preview
       const availableWidth = pdfWidth - (margin * 2);
       const availableHeight = pdfHeight - (margin * 2);
 
@@ -212,8 +181,8 @@ const ShiftScheduler = () => {
         // Content fits on one page
         pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
       } else {
-        // Content needs multiple pages - use overlap to prevent cutting
-        const overlap = 10; // mm of overlap to prevent cutting content
+        // Content needs multiple pages - use minimal overlap to prevent cutting
+        const overlap = 5; // mm of overlap to prevent cutting content
         const pageHeightInPixels = (availableHeight / imgWidth) * canvas.width;
         const overlapInPixels = (overlap / imgWidth) * canvas.width;
         
@@ -1802,7 +1771,7 @@ const ShiftScheduler = () => {
       <div className="footer">
         <div className="footer-content">
           <div className="timestamp">
-            Last Updated: Saturday, August 17, 2025 at 7:47:00 AM EDT
+            Last Updated: Saturday, August 17, 2025 at 8:04:00 AM EDT
           </div>
           <div className="claude-credit">
             🤖 Generated with <a href="https://claude.ai/code" target="_blank" rel="noopener noreferrer" style={{color: 'var(--accent-color)', textDecoration: 'none'}}>Claude Code</a>
