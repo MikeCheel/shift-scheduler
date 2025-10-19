@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Shift Scheduler</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --text-color: #333;
+            --bg-color: white;
+            --input-bg: white;
+            --input-border: #e9ecef;
+            --header-bg: linear-gradient(135deg, #2c3e50, #34495e);
+            --section-bg: #f8f9fa;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --text-color: #e9ecef;
+            --bg-color: #1a1a1a;
+            --input-bg: #2d2d2d;
+            --input-border: #404040;
+            --header-bg: linear-gradient(135deg, #0d1117, #161b22);
+            --section-bg: #2d2d2d;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: var(--header-bg);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .input-section {
+            background: var(--section-bg);
+            padding: 30px;
+            border-right: 1px solid var(--input-border);
+            transition: all 0.3s ease;
+        }
+
+        .output-section {
+            padding: 30px;
+            background: var(--bg-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            background: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .schedule-output {
+            background: var(--section-bg);
+            border-radius: 8px;
+            padding: 25px;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid var(--input-border);
+            transition: all 0.3s ease;
+        }
+
+        .schedule-round {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .schedule-round:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .round-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .shift-pair {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: var(--bg-color);
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .shift-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .shift-employees {
+            color: #7f8c8d;
+        }
+
+        .stats-section {
+            background: var(--section-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg-color);
+            border-radius: 6px;
+            box-shadow: 0 2px 5px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .error-message {
+            background: #ffeaa7;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #fdcb6e;
+            display: none;
+        }
+
+        .success-message {
+            background: #55efc4;
+            color: #00b894;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00b894;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .employee-names-hint {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-section {
+                border-right: none;
+                border-bottom: 1px solid var(--input-border);
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* Algorithm descriptions */
+        .algorithm-description {
+            margin-top: 8px;
+            padding: 12px;
+            background: var(--section-bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            font-size: 0.9rem;
+            color: var(--text-color);
+            display: none;
+        }
+
+        .algorithm-description.active {
+            display: block;
+        }
+
+        /* Button group */
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .btn-tertiary:hover {
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                font-size: 12pt;
+            }
+            
+            .container {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                max-width: none !important;
+                margin: 0 !important;
+            }
+            
+            .header {
+                background: #2c3e50 !important;
+                color: white !important;
+                page-break-after: avoid;
+            }
+            
+            .input-section {
+                display: none !important;
+            }
+            
+            .content {
+                grid-template-columns: 1fr !important;
+                display: block !important;
+            }
+            
+            .schedule-output {
+                max-height: none !important;
+                border: none !important;
+                background: white !important;
+                padding: 20px !important;
+            }
+            
+            .schedule-round {
+                page-break-inside: avoid;
+                page-break-after: auto;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #e9ecef;
+            }
+            
+            .schedule-round:last-child {
+                border-bottom: none;
+            }
+            
+            .round-header {
+                font-size: 14pt !important;
+                font-weight: 600;
+                color: #2c3e50 !important;
+                margin-bottom: 15px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #667eea;
+                page-break-after: avoid;
+            }
+            
+            .shift-pair {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                margin-bottom: 6px;
+                background: white !important;
+                border-radius: 4px;
+                border-left: 3px solid #667eea;
+                page-break-inside: avoid;
+            }
+            
+            .theme-toggle, .btn {
+                display: none !important;
+            }
+            
+            .stats-section {
+                background: #f8f9fa !important;
+                border-left: 4px solid #667eea !important;
+                page-break-inside: avoid;
+                page-break-before: auto;
+                margin-top: 40px;
+                padding: 25px !important;
+            }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+                margin-top: 15px;
+            }
+            
+            .stat-item {
+                text-align: center;
+                padding: 12px;
+                background: white !important;
+                border-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                page-break-inside: avoid;
+            }
+            
+            .stat-value {
+                font-size: 16pt !important;
+                font-weight: 700;
+                color: #2c3e50 !important;
+                margin-bottom: 4px;
+            }
+            
+            .stat-label {
+                font-size: 9pt !important;
+                color: #7f8c8d !important;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            
+            /* Ensure proper page breaks */
+            h2, h3 {
+                page-break-after: avoid;
+            }
+            
+            /* Add page margins for better printing */
+            @page {
+                margin: 1cm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Employee Shift Scheduler</h1>
+            <p>Generate fair and balanced work schedules for your team</p>
+            <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                🌙
+            </button>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+                
+                <div class="form-group">
+                    <label for="numEmployees">Number of Employees *</label>
+                    <input type="number" id="numEmployees" min="2" max="50" value="4" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="employeeNames">Employee Names (Optional)</label>
+                    <textarea id="employeeNames" placeholder="Enter names, one per line or comma-separated&#10;Example:&#10;John Smith&#10;Jane Doe&#10;Mike Johnson"></textarea>
+                    <div class="employee-names-hint">
+                        Leave empty to use generic names (Employee 1, Employee 2, etc.)
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="algorithm">Scheduling Algorithm</label>
+                    <select id="algorithm">
+                        <option value="standard">Standard Round-Robin</option>
+                        <option value="circle" selected>Circle Method</option>
+                    </select>
+                    
+                    <div class="algorithm-description" id="standardDescription">
+                        <strong>Standard Round-Robin:</strong> Uses mathematical indexing with modulo operations. More computationally elegant but harder to understand. Best for performance with large employee counts.
+                    </div>
+                    
+                    <div class="algorithm-description" id="circleDescription">
+                        <strong>Circle Method:</strong> Uses physical rotation of the employee array. More intuitive and visually clear. Easier to debug and understand. Recommended for most use cases.
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn" id="generateBtn">
+                        Generate Schedule
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        Clear Schedule
+                    </button>
+                </div>
+                
+                <div class="button-group" style="margin-top: 10px;">
+                    <button class="btn btn-tertiary" id="printBtn">
+                        Print Schedule
+                    </button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    Generating schedule...
+                </div>
+                
+                <div class="footer" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--input-border);">
+                    <div class="last-updated" id="lastUpdated" style="text-align: center; color: var(--text-color); font-size: 0.9rem; opacity: 0.7;">
+                        Last Updated: <span id="timestamp"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="output-section">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">Generated Schedule</h2>
+                <div class="schedule-output" id="scheduleOutput">
+                    <div style="text-align: center; color: #7f8c8d; padding: 50px;">
+                        <p>Enter the number of employees and click "Generate Schedule" to create your schedule.</p>
+                    </div>
+                </div>
+                
+                <div class="stats-section" id="statsSection" style="display: none;">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Schedule Statistics</h3>
+                    <div class="stats-grid" id="statsGrid">
+                        <!-- Stats will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Include the schedule generator functions directly
+        function generateSchedule(numEmployees) {
+            if (numEmployees < 2) {
+                throw new Error("Number of employees must be at least 2");
+            }
+            
+            const employees = Array.from({length: numEmployees}, (_, i) => i + 1);
+            const isOdd = numEmployees % 2 !== 0;
+            
+            if (isOdd) {
+                employees.push('BYE');
+                numEmployees += 1;
+            }
+            
+            const totalRounds = numEmployees - 1;
+            const shiftsPerRound = numEmployees / 2;
+            const schedule = [];
+            
+            for (let round = 0; round < totalRounds; round++) {
+                const roundPairs = [];
+                roundPairs.push([employees[0], employees[numEmployees - 1]]);
+                
+                for (let i = 1; i < shiftsPerRound; i++) {
+                    const firstIndex = 1 + ((round + i - 1) % (numEmployees - 1));
+                    const secondIndex = 1 + ((round + numEmployees - 2 - i) % (numEmployees - 1));
+                    
+                    roundPairs.push([employees[firstIndex], employees[secondIndex]]);
+                }
+                
+                if (isOdd) {
+                    const filteredPairs = roundPairs.filter(pair => !pair.includes('BYE'));
+                    schedule.push(filteredPairs);
+                } else {
+                    schedule.push(roundPairs);
+                }
+            }
+            
+            return schedule;
+        }
+
+        function generateScheduleCircleMethod(numEmployees) {
+            if (numEmployees < 2) {
+                throw new Error("Number of employees must be at least 2");
+            }
+            
+            let employees = Array.from({length: numEmployees}, (_, i) => i + 1);
+            const isOdd = numEmployees % 2 !== 0;
+            
+            if (isOdd) {
+                employees.push('BYE');
+                numEmployees += 1;
+            }
+            
+            const totalRounds = numEmployees - 1;
+            const schedule = [];
+            
+            for (let round = 0; round < totalRounds; round++) {
+                const roundPairs = [];
+                
+                for (let i = 0; i < numEmployees / 2; i++) {
+                    roundPairs.push([employees[i], employees[numEmployees - 1 - i]]);
+                }
+                
+                if (isOdd) {
+                    const filteredPairs = roundPairs.filter(pair => !pair.includes('BYE'));
+                    schedule.push(filteredPairs);
+                } else {
+                    schedule.push(roundPairs);
+                }
+                
+                const fixed = employees[0];
+                const rotated = [fixed, employees[numEmployees - 1], ...employees.slice(1, numEmployees - 1)];
+                employees = rotated;
+            }
+            
+            return schedule;
+        }
+
+        function formatSchedule(schedule, employeeNames = null) {
+            if (employeeNames && employeeNames.length !== Math.max(...schedule.flat(2).filter(x => typeof x === 'number'))) {
+                console.warn("Employee names count doesn't match schedule");
+                employeeNames = null;
+            }
+            
+            const result = [];
+            result.push("=== EMPLOYEE SCHEDULE ===");
+            result.push("");
+            
+            schedule.forEach((round, roundIndex) => {
+                result.push(`Round ${roundIndex + 1}:`);
+                round.forEach((pair, pairIndex) => {
+                    const pairNames = pair.map(emp => 
+                        employeeNames ? (emp === 'BYE' ? 'BYE' : employeeNames[emp - 1]) : `Employee ${emp}`
+                    );
+                    result.push(`  Shift ${pairIndex + 1}: ${pairNames[0]} & ${pairNames[1]}`);
+                });
+                result.push('');
+            });
+            
+            return result.join('\n');
+        }
+
+        function getScheduleStats(schedule) {
+            const allPairs = new Set();
+            const employeeShifts = {};
+            
+            const allEmployees = [...new Set(schedule.flat(2).filter(x => typeof x === 'number'))];
+            allEmployees.forEach(emp => { employeeShifts[emp] = 0; });
+            
+            schedule.forEach(round => {
+                round.forEach(pair => {
+                    if (!pair.includes('BYE')) {
+                        const sortedPair = [...pair].sort((a, b) => a - b);
+                        allPairs.add(`${sortedPair[0]}-${sortedPair[1]}`);
+                        
+                        employeeShifts[pair[0]]++;
+                        employeeShifts[pair[1]]++;
+                    }
+                });
+            });
+            
+            const totalRounds = schedule.length;
+            const shiftsPerRound = schedule[0] ? schedule[0].length : 0;
+            const totalEmployees = allEmployees.length;
+            
+            return {
+                totalEmployees,
+                totalRounds,
+                shiftsPerRound,
+                totalUniquePairs: allPairs.size,
+                expectedPairs: totalEmployees * (totalEmployees - 1) / 2,
+                employeeShifts,
+                isComplete: allPairs.size === totalEmployees * (totalEmployees - 1) / 2
+            };
+        }
+
+        // UI Functions
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function parseEmployeeNames(input) {
+            if (!input.trim()) return null;
+            
+            // Split by newlines or commas, trim each name, and filter out empty strings
+            const names = input.split(/[\n,]/)
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+            
+            return names.length > 0 ? names : null;
+        }
+
+        function generateScheduleUI() {
+            hideMessages();
+            
+            const numEmployeesInput = document.getElementById('numEmployees');
+            const employeeNamesInput = document.getElementById('employeeNames');
+            const algorithmSelect = document.getElementById('algorithm');
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingEl = document.getElementById('loading');
+            
+            const numEmployees = parseInt(numEmployeesInput.value);
+            const employeeNames = parseEmployeeNames(employeeNamesInput.value);
+            const algorithm = algorithmSelect.value;
+            
+            // Validation
+            if (isNaN(numEmployees) || numEmployees < 2) {
+                showError('Please enter a valid number of employees (minimum 2)');
+                return;
+            }
+            
+            if (numEmployees > 50) {
+                showError('Maximum number of employees is 50 for optimal performance');
+                return;
+            }
+            
+            if (employeeNames && employeeNames.length !== numEmployees) {
+                showError(`Number of employee names (${employeeNames.length}) doesn't match number of employees (${numEmployees})`);
+                return;
+            }
+            
+            // Show loading
+            generateBtn.disabled = true;
+            loadingEl.style.display = 'block';
+            
+            // Simulate async operation for better UX
+            setTimeout(() => {
+                try {
+                    let schedule;
+                    if (algorithm === 'circle') {
+                        schedule = generateScheduleCircleMethod(numEmployees);
+                    } else {
+                        schedule = generateSchedule(numEmployees);
+                    }
+                    
+                    displaySchedule(schedule, employeeNames);
+                    displayStats(schedule);
+                    showSuccess(`Schedule generated successfully for ${numEmployees} employees!`);
+                    
+                } catch (error) {
+                    showError('Error generating schedule: ' + error.message);
+                    clearOutput();
+                } finally {
+                    generateBtn.disabled = false;
+                    loadingEl.style.display = 'none';
+                }
+            }, 100);
+        }
+
+        function displaySchedule(schedule, employeeNames) {
+            const outputEl = document.getElementById('scheduleOutput');
+            
+            if (schedule.length === 0) {
+                outputEl.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 50px;">No schedule could be generated.</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            schedule.forEach((round, roundIndex) => {
+                html += `<div class="schedule-round">`;
+                html += `<div class="round-header">Round ${roundIndex + 1}</div>`;
+                
+                round.forEach((pair, pairIndex) => {
+                    const pairNames = pair.map(emp =>
+                        employeeNames ? (emp === 'BYE' ? 'BYE' : employeeNames[emp - 1]) : `Employee ${emp}`
+                    );
+                    
+                    html += `<div class="shift-pair">`;
+                    html += `<span class="shift-label">Shift ${pairIndex + 1}</span>`;
+                    html += `<span class="shift-employees">${pairNames[0]} & ${pairNames[1]}</span>`;
+                    html += `</div>`;
+                });
+                
+                html += `</div>`;
+            });
+            
+            outputEl.innerHTML = html;
+        }
+
+        function displayStats(schedule) {
+            const statsSection = document.getElementById('statsSection');
+            const statsGrid = document.getElementById('statsGrid');
+            
+            if (schedule.length === 0) {
+                statsSection.style.display = 'none';
+                return;
+            }
+            
+            const stats = getScheduleStats(schedule);
+            
+            let statsHtml = `
+                <div class="stat-item">
+                    <div class="stat-value">${stats.totalEmployees}</div>
+                    <div class="stat-label">Total Employees</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.totalRounds}</div>
+                    <div class="stat-label">Total Rounds</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.shiftsPerRound}</div>
+                    <div class="stat-label">Shifts per Round</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.totalUniquePairs}</div>
+                    <div class="stat-label">Unique Pairs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.isComplete ? '✓' : '✗'}</div>
+                    <div class="stat-label">Complete Schedule</div>
+                </div>
+            `;
+            
+            statsGrid.innerHTML = statsHtml;
+            statsSection.style.display = 'block';
+        }
+
+        function clearOutput() {
+            document.getElementById('scheduleOutput').innerHTML =
+                '<div style="text-align: center; color: #7f8c8d; padding: 50px;">Enter the number of employees and click "Generate Schedule" to create your schedule.</div>';
+            document.getElementById('statsSection').style.display = 'none';
+        }
+
+        // Dark mode functionality
+        function toggleDarkMode() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            
+            // Save preference to localStorage
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Initialize theme from localStorage or system preference
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Algorithm description functionality
+        function updateAlgorithmDescription() {
+            const algorithm = document.getElementById('algorithm').value;
+            
+            // Hide all descriptions
+            document.querySelectorAll('.algorithm-description').forEach(desc => {
+                desc.classList.remove('active');
+            });
+            
+            // Show selected description
+            const selectedDesc = document.getElementById(algorithm + 'Description');
+            if (selectedDesc) {
+                selectedDesc.classList.add('active');
+            }
+        }
+
+        // Print schedule functionality
+        function printSchedule() {
+            const scheduleOutput = document.getElementById('scheduleOutput');
+            const statsSection = document.getElementById('statsSection');
+            
+            if (scheduleOutput.innerHTML.includes('Enter the number of employees')) {
+                showError('No schedule to print. Please generate a schedule first.');
+                return;
+            }
+            
+            // Show success message
+            showSuccess('Opening print dialog...');
+            
+            // Use setTimeout to ensure the message is visible before print
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+
+        // Auto-sync employee count with names
+        function syncEmployeeCount() {
+            const employeeNamesInput = document.getElementById('employeeNames');
+            const numEmployeesInput = document.getElementById('numEmployees');
+            
+            const names = parseEmployeeNames(employeeNamesInput.value);
+            
+            if (names && names.length > 0) {
+                // Update the number of employees to match the names count
+                numEmployeesInput.value = names.length;
+            }
+        }
+
+        // Update timestamp function
+        function updateTimestamp() {
+            const now = new Date();
+            const timestampEl = document.getElementById('timestamp');
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            timestampEl.textContent = now.toLocaleString('en-US', options);
+        }
+
+        // Clear schedule functionality
+        function clearSchedule() {
+            clearOutput();
+            hideMessages();
+            showSuccess('Schedule cleared successfully!');
+        }
+
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', generateScheduleUI);
+        document.getElementById('clearBtn').addEventListener('click', clearSchedule);
+        document.getElementById('printBtn').addEventListener('click', printSchedule);
+        document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+        document.getElementById('algorithm').addEventListener('change', updateAlgorithmDescription);
+        document.getElementById('employeeNames').addEventListener('blur', syncEmployeeCount);
+        
+        // Allow Enter key to trigger generation
+        document.getElementById('numEmployees').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateScheduleUI();
+            }
+        });
+        
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            initializeTheme();
+            clearOutput();
+            updateAlgorithmDescription(); // Show initial algorithm description
+            updateTimestamp(); // Initialize timestamp
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "shift-scheduler",
+  "version": "1.0.0",
+  "description": "A web application for generating fair and balanced work schedules using round-robin pairing algorithms",
+  "main": "shift-scheduler.html",
+  "scripts": {
+    "test": "node src/tests/schedule-generator-tests.js",
+    "start": "open shift-scheduler.html || start shift-scheduler.html || xdg-open shift-scheduler.html"
+  },
+  "keywords": [
+    "scheduler",
+    "shift",
+    "employee",
+    "round-robin",
+    "schedule",
+    "workforce"
+  ],
+  "author": "Shift Scheduler Project",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/shift-scheduler-2.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {}
+}
