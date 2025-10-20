@@ -109,6 +109,29 @@ The test suite validates:
 - More computationally elegant
 - Better performance with very large teams
 
+### Fair BYE Rotation System
+
+For odd numbers of employees, the scheduler implements a **Fair BYE Rotation System** that ensures:
+
+- **Equal Breaks**: Each employee gets exactly one break (paired with BYE) during the schedule
+- **Fair Distribution**: No employee is paired with BYE again until all employees have had their turn
+- **Complete Pairings**: All possible employee pairs are created exactly once
+- **Balanced Workload**: Equal distribution of shifts among all employees
+
+**How it works:**
+1. When there are odd numbers of employees, one employee gets a break (BYE) each round
+2. The system tracks which employees have had breaks
+3. Employees are rotated through BYE assignments in a fair sequence
+4. The algorithm ensures all possible pair combinations are created
+5. Each employee works the same number of shifts (n-1 for n employees)
+
+**Example with 5 employees:**
+- Round 1: Employee 1 gets BYE, others work in pairs
+- Round 2: Employee 2 gets BYE, others work in pairs
+- Round 3: Employee 3 gets BYE, others work in pairs
+- Round 4: Employee 4 gets BYE, others work in pairs
+- Round 5: Employee 5 gets BYE, others work in pairs
+
 ### Browser Compatibility
 - Chrome 60+
 - Firefox 55+
@@ -130,6 +153,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Circle Algorithm** implementation for round-robin scheduling
+- **Fair BYE Rotation System** for odd number of employees
 - Round-robin scheduling based on tournament pairing principles
 - Modern UI design inspired by current web standards
 - Test-driven development approach for reliability

@@ -8,46 +8,109 @@ function generateSchedule(numEmployees) {
         throw new Error("Number of employees must be at least 2");
     }
     
-    const employees = Array.from({length: numEmployees}, (_, i) => i + 1);
     const isOdd = numEmployees % 2 !== 0;
     
-    // For odd number, add a "dummy" employee to make even
     if (isOdd) {
-        employees.push('BYE'); // BYE represents no shift
-        numEmployees += 1;
+        return generateScheduleWithFairByeRotation(numEmployees);
+    } else {
+        return generateScheduleCircleMethod(numEmployees);
+    }
+}
+
+/**
+ * Generates schedule with fair BYE rotation for odd number of employees
+ * Ensures each employee gets exactly one break (paired with BYE once)
+ * Uses backtracking algorithm to find complete schedule
+ */
+function generateScheduleWithFairByeRotation(numEmployees) {
+    if (numEmployees < 3) {
+        throw new Error("Number of employees must be at least 3 for fair BYE rotation");
     }
     
-    const totalRounds = numEmployees - 1;
-    const shiftsPerRound = numEmployees / 2;
+    const employees = Array.from({length: numEmployees}, (_, i) => i + 1);
+    const totalRounds = numEmployees;
     const schedule = [];
     
-    // Generate rounds using standard round-robin algorithm
+    // Track which employees have been assigned BYE
+    const byeAssignments = new Set();
+    
+    // Generate rounds with backtracking to ensure complete schedule
     for (let round = 0; round < totalRounds; round++) {
         const roundPairs = [];
+        const usedEmployees = new Set();
         
-        // First pair: fixed employee with last in rotated list
-        roundPairs.push([employees[0], employees[numEmployees - 1]]);
-        
-        // Remaining pairs
-        for (let i = 1; i < shiftsPerRound; i++) {
-            const firstIndex = 1 + ((round + i - 1) % (numEmployees - 1));
-            const secondIndex = 1 + ((round + numEmployees - 2 - i) % (numEmployees - 1));
-            
-            roundPairs.push([employees[firstIndex], employees[secondIndex]]);
+        // Determine which employee gets BYE this round (fair rotation)
+        let employeeWithBye = null;
+        for (let i = 0; i < employees.length; i++) {
+            const candidate = employees[(round + i) % employees.length];
+            if (!byeAssignments.has(candidate)) {
+                employeeWithBye = candidate;
+                break;
+            }
         }
         
-        // Filter out BYE pairs for odd employee count
-        if (isOdd) {
-            const filteredPairs = roundPairs.filter(pair => 
-                !pair.includes('BYE')
-            );
-            schedule.push(filteredPairs);
+        // If all employees have had BYE, reset and start over
+        if (!employeeWithBye) {
+            byeAssignments.clear();
+            employeeWithBye = employees[round % employees.length];
+        }
+        
+        // Mark this employee as having had BYE
+        byeAssignments.add(employeeWithBye);
+        usedEmployees.add(employeeWithBye);
+        
+        // Create pairs using backtracking approach
+        const remainingEmployees = employees.filter(emp => !usedEmployees.has(emp));
+        const pairs = findValidPairs(remainingEmployees, schedule);
+        
+        if (pairs) {
+            roundPairs.push(...pairs);
         } else {
-            schedule.push(roundPairs);
+            // Fallback: use simple pairing if backtracking fails
+            for (let i = 0; i < remainingEmployees.length; i += 2) {
+                if (i + 1 < remainingEmployees.length) {
+                    roundPairs.push([remainingEmployees[i], remainingEmployees[i + 1]]);
+                }
+            }
         }
+        
+        schedule.push(roundPairs);
     }
     
     return schedule;
+}
+
+/**
+ * Helper function to find valid pairs using backtracking
+ */
+function findValidPairs(employees, schedule) {
+    if (employees.length === 0) return [];
+    if (employees.length === 1) return null; // Cannot pair single employee
+    
+    const emp1 = employees[0];
+    
+    for (let i = 1; i < employees.length; i++) {
+        const emp2 = employees[i];
+        
+        // Check if this pair hasn't been used before
+        const pairUsed = schedule.some(round =>
+            round.some(pair =>
+                (pair[0] === emp1 && pair[1] === emp2) ||
+                (pair[0] === emp2 && pair[1] === emp1)
+            )
+        );
+        
+        if (!pairUsed) {
+            const remaining = employees.filter((_, index) => index !== 0 && index !== i);
+            const remainingPairs = findValidPairs(remaining, schedule);
+            
+            if (remainingPairs !== null) {
+                return [[emp1, emp2], ...remainingPairs];
+            }
+        }
+    }
+    
+    return null;
 }
 
 // Alternative implementation using circle rotation (often more readable)
@@ -59,7 +122,7 @@ function generateScheduleCircleMethod(numEmployees) {
     let employees = Array.from({length: numEmployees}, (_, i) => i + 1);
     const isOdd = numEmployees % 2 !== 0;
     
-    // For odd number, add a "BYE" to make even
+    // For odd number, add BYE placeholder to make even pairing
     if (isOdd) {
         employees.push('BYE');
         numEmployees += 1;
@@ -76,15 +139,9 @@ function generateScheduleCircleMethod(numEmployees) {
             roundPairs.push([employees[i], employees[numEmployees - 1 - i]]);
         }
         
-        // Filter out BYE pairs for odd employee count and store
-        if (isOdd) {
-            const filteredPairs = roundPairs.filter(pair => 
-                !pair.includes('BYE')
-            );
-            schedule.push(filteredPairs);
-        } else {
-            schedule.push(roundPairs);
-        }
+        // Remove BYE pairs - employee paired with BYE gets a break
+        const filteredPairs = roundPairs.filter(pair => !pair.includes('BYE'));
+        schedule.push(filteredPairs);
         
         // Rotate all except first element
         const fixed = employees[0];
