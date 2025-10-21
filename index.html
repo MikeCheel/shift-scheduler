@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Shift Scheduler</title>
+    <title>Worker Shift Scheduler</title>
     <style>
         :root {
             --primary-color: #667eea;
@@ -202,7 +202,7 @@
             color: #2c3e50;
         }
 
-        .shift-employees {
+        .shift-workers {
             color: #7f8c8d;
         }
 
@@ -287,7 +287,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        .employee-names-hint {
+        .worker-names-hint {
             font-size: 0.85rem;
             color: #7f8c8d;
             margin-top: 5px;
@@ -501,7 +501,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Employee Shift Scheduler</h1>
+            <h1>Worker Shift Scheduler</h1>
             <p>Generate fair and balanced work schedules for your team</p>
             <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
                 🌙
@@ -514,15 +514,15 @@
                 <div class="success-message" id="successMessage"></div>
                 
                 <div class="form-group">
-                    <label for="numEmployees">Number of Employees *</label>
-                    <input type="number" id="numEmployees" min="2" max="50" value="4" required>
+                    <label for="numWorkers">Number of Workers *</label>
+                    <input type="number" id="numWorkers" min="2" max="50" value="4" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="employeeNames">Employee Names (Optional)</label>
-                    <textarea id="employeeNames" placeholder="Enter names, one per line or comma-separated&#10;Example:&#10;John Smith&#10;Jane Doe&#10;Mike Johnson"></textarea>
-                    <div class="employee-names-hint">
-                        Leave empty to use generic names (Employee 1, Employee 2, etc.)
+                    <label for="workerNames">Worker Names (Optional)</label>
+                    <textarea id="workerNames" placeholder="Enter names, one per line or comma-separated&#10;Example:&#10;John Smith&#10;Jane Doe&#10;Mike Johnson"></textarea>
+                    <div class="worker-names-hint">
+                        Leave empty to use generic names (Worker 1, Worker 2, etc.)
                     </div>
                 </div>
                 
@@ -534,11 +534,11 @@
                     </select>
                     
                     <div class="algorithm-description" id="standardDescription">
-                        <strong>Standard Round-Robin:</strong> Uses mathematical indexing with modulo operations. More computationally elegant but harder to understand. Best for performance with large employee counts.
+                        <strong>Standard Round-Robin:</strong> Uses mathematical indexing with modulo operations. More computationally elegant but harder to understand. Best for performance with large worker counts.
                     </div>
                     
                     <div class="algorithm-description" id="circleDescription">
-                        <strong>Circle Method:</strong> Uses physical rotation of the employee array. More intuitive and visually clear. Easier to debug and understand. Recommended for most use cases.
+                        <strong>Circle Method:</strong> Uses physical rotation of the worker array. More intuitive and visually clear. Easier to debug and understand. Recommended for most use cases.
                     </div>
                 </div>
                 
@@ -573,7 +573,7 @@
                 <h2 style="margin-bottom: 20px; color: #2c3e50;">Generated Schedule</h2>
                 <div class="schedule-output" id="scheduleOutput">
                     <div style="text-align: center; color: #7f8c8d; padding: 50px;">
-                        <p>Enter the number of employees and click "Generate Schedule" to create your schedule.</p>
+                        <p>Enter the number of workers and click "Generate Schedule" to create your schedule.</p>
                     </div>
                 </div>
                 
@@ -589,32 +589,32 @@
 
     <script>
         // Include the schedule generator functions directly
-        function generateSchedule(numEmployees) {
-            if (numEmployees < 2) {
-                throw new Error("Number of employees must be at least 2");
+        function generateSchedule(numWorkers) {
+            if (numWorkers < 2) {
+                throw new Error("Number of workers must be at least 2");
             }
-            
-            const employees = Array.from({length: numEmployees}, (_, i) => i + 1);
-            const isOdd = numEmployees % 2 !== 0;
-            
+
+            const workers = Array.from({length: numWorkers}, (_, i) => i + 1);
+            const isOdd = numWorkers % 2 !== 0;
+
             if (isOdd) {
-                employees.push('BYE');
-                numEmployees += 1;
+                workers.push('BYE');
+                numWorkers += 1;
             }
-            
-            const totalRounds = numEmployees - 1;
-            const shiftsPerRound = numEmployees / 2;
+
+            const totalRounds = numWorkers - 1;
+            const shiftsPerRound = numWorkers / 2;
             const schedule = [];
             
             for (let round = 0; round < totalRounds; round++) {
                 const roundPairs = [];
-                roundPairs.push([employees[0], employees[numEmployees - 1]]);
-                
+                roundPairs.push([workers[0], workers[numWorkers - 1]]);
+
                 for (let i = 1; i < shiftsPerRound; i++) {
-                    const firstIndex = 1 + ((round + i - 1) % (numEmployees - 1));
-                    const secondIndex = 1 + ((round + numEmployees - 2 - i) % (numEmployees - 1));
-                    
-                    roundPairs.push([employees[firstIndex], employees[secondIndex]]);
+                    const firstIndex = 1 + ((round + i - 1) % (numWorkers - 1));
+                    const secondIndex = 1 + ((round + numWorkers - 2 - i) % (numWorkers - 1));
+
+                    roundPairs.push([workers[firstIndex], workers[secondIndex]]);
                 }
                 
                 if (isOdd) {
@@ -628,27 +628,27 @@
             return schedule;
         }
 
-        function generateScheduleCircleMethod(numEmployees) {
-            if (numEmployees < 2) {
-                throw new Error("Number of employees must be at least 2");
+        function generateScheduleCircleMethod(numWorkers) {
+            if (numWorkers < 2) {
+                throw new Error("Number of workers must be at least 2");
             }
-            
-            let employees = Array.from({length: numEmployees}, (_, i) => i + 1);
-            const isOdd = numEmployees % 2 !== 0;
-            
+
+            let workers = Array.from({length: numWorkers}, (_, i) => i + 1);
+            const isOdd = numWorkers % 2 !== 0;
+
             if (isOdd) {
-                employees.push('BYE');
-                numEmployees += 1;
+                workers.push('BYE');
+                numWorkers += 1;
             }
-            
-            const totalRounds = numEmployees - 1;
+
+            const totalRounds = numWorkers - 1;
             const schedule = [];
             
             for (let round = 0; round < totalRounds; round++) {
                 const roundPairs = [];
                 
-                for (let i = 0; i < numEmployees / 2; i++) {
-                    roundPairs.push([employees[i], employees[numEmployees - 1 - i]]);
+                for (let i = 0; i < numWorkers / 2; i++) {
+                    roundPairs.push([workers[i], workers[numWorkers - 1 - i]]);
                 }
                 
                 if (isOdd) {
@@ -658,69 +658,69 @@
                     schedule.push(roundPairs);
                 }
                 
-                const fixed = employees[0];
-                const rotated = [fixed, employees[numEmployees - 1], ...employees.slice(1, numEmployees - 1)];
-                employees = rotated;
+                const fixed = workers[0];
+                const rotated = [fixed, workers[numWorkers - 1], ...workers.slice(1, numWorkers - 1)];
+                workers = rotated;
             }
             
             return schedule;
         }
 
-        function formatSchedule(schedule, employeeNames = null) {
-            if (employeeNames && employeeNames.length !== Math.max(...schedule.flat(2).filter(x => typeof x === 'number'))) {
-                console.warn("Employee names count doesn't match schedule");
-                employeeNames = null;
+        function formatSchedule(schedule, workerNames = null) {
+            if (workerNames && workerNames.length !== Math.max(...schedule.flat(2).filter(x => typeof x === 'number'))) {
+                console.warn("Worker names count doesn't match schedule");
+                workerNames = null;
             }
-            
+
             const result = [];
-            result.push("=== EMPLOYEE SCHEDULE ===");
+            result.push("=== WORKER SCHEDULE ===");
             result.push("");
-            
+
             schedule.forEach((round, roundIndex) => {
                 result.push(`Round ${roundIndex + 1}:`);
                 round.forEach((pair, pairIndex) => {
-                    const pairNames = pair.map(emp => 
-                        employeeNames ? (emp === 'BYE' ? 'BYE' : employeeNames[emp - 1]) : `Employee ${emp}`
+                    const pairNames = pair.map(worker =>
+                        workerNames ? (worker === 'BYE' ? 'BYE' : workerNames[worker - 1]) : `Worker ${worker}`
                     );
                     result.push(`  Shift ${pairIndex + 1}: ${pairNames[0]} & ${pairNames[1]}`);
                 });
                 result.push('');
             });
-            
+
             return result.join('\n');
         }
 
         function getScheduleStats(schedule) {
             const allPairs = new Set();
-            const employeeShifts = {};
-            
-            const allEmployees = [...new Set(schedule.flat(2).filter(x => typeof x === 'number'))];
-            allEmployees.forEach(emp => { employeeShifts[emp] = 0; });
-            
+            const workerShifts = {};
+
+            const allWorkers = [...new Set(schedule.flat(2).filter(x => typeof x === 'number'))];
+            allWorkers.forEach(worker => { workerShifts[worker] = 0; });
+
             schedule.forEach(round => {
                 round.forEach(pair => {
                     if (!pair.includes('BYE')) {
                         const sortedPair = [...pair].sort((a, b) => a - b);
                         allPairs.add(`${sortedPair[0]}-${sortedPair[1]}`);
-                        
-                        employeeShifts[pair[0]]++;
-                        employeeShifts[pair[1]]++;
+
+                        workerShifts[pair[0]]++;
+                        workerShifts[pair[1]]++;
                     }
                 });
             });
-            
+
             const totalRounds = schedule.length;
             const shiftsPerRound = schedule[0] ? schedule[0].length : 0;
-            const totalEmployees = allEmployees.length;
-            
+            const totalWorkers = allWorkers.length;
+
             return {
-                totalEmployees,
+                totalWorkers,
                 totalRounds,
                 shiftsPerRound,
                 totalUniquePairs: allPairs.size,
-                expectedPairs: totalEmployees * (totalEmployees - 1) / 2,
-                employeeShifts,
-                isComplete: allPairs.size === totalEmployees * (totalEmployees - 1) / 2
+                expectedPairs: totalWorkers * (totalWorkers - 1) / 2,
+                workerShifts,
+                isComplete: allPairs.size === totalWorkers * (totalWorkers - 1) / 2
             };
         }
 
@@ -744,7 +744,7 @@
             document.getElementById('successMessage').style.display = 'none';
         }
 
-        function parseEmployeeNames(input) {
+        function parseWorkerNames(input) {
             if (!input.trim()) return null;
             
             // Split by newlines or commas, trim each name, and filter out empty strings
@@ -758,29 +758,29 @@
         function generateScheduleUI() {
             hideMessages();
             
-            const numEmployeesInput = document.getElementById('numEmployees');
-            const employeeNamesInput = document.getElementById('employeeNames');
+            const numWorkersInput = document.getElementById('numWorkers');
+            const workerNamesInput = document.getElementById('workerNames');
             const algorithmSelect = document.getElementById('algorithm');
             const generateBtn = document.getElementById('generateBtn');
             const loadingEl = document.getElementById('loading');
             
-            const numEmployees = parseInt(numEmployeesInput.value);
-            const employeeNames = parseEmployeeNames(employeeNamesInput.value);
+            const numWorkers = parseInt(numWorkersInput.value);
+            const workerNames = parseWorkerNames(workerNamesInput.value);
             const algorithm = algorithmSelect.value;
             
             // Validation
-            if (isNaN(numEmployees) || numEmployees < 2) {
-                showError('Please enter a valid number of employees (minimum 2)');
+            if (isNaN(numWorkers) || numWorkers < 2) {
+                showError('Please enter a valid number of workers (minimum 2)');
                 return;
             }
-            
-            if (numEmployees > 50) {
-                showError('Maximum number of employees is 50 for optimal performance');
+
+            if (numWorkers > 50) {
+                showError('Maximum number of workers is 50 for optimal performance');
                 return;
             }
-            
-            if (employeeNames && employeeNames.length !== numEmployees) {
-                showError(`Number of employee names (${employeeNames.length}) doesn't match number of employees (${numEmployees})`);
+
+            if (workerNames && workerNames.length !== numWorkers) {
+                showError(`Number of worker names (${workerNames.length}) doesn't match number of workers (${numWorkers})`);
                 return;
             }
             
@@ -793,14 +793,14 @@
                 try {
                     let schedule;
                     if (algorithm === 'circle') {
-                        schedule = generateScheduleCircleMethod(numEmployees);
+                        schedule = generateScheduleCircleMethod(numWorkers);
                     } else {
-                        schedule = generateSchedule(numEmployees);
+                        schedule = generateSchedule(numWorkers);
                     }
-                    
-                    displaySchedule(schedule, employeeNames);
+
+                    displaySchedule(schedule, workerNames);
                     displayStats(schedule);
-                    showSuccess(`Schedule generated successfully for ${numEmployees} employees!`);
+                    showSuccess(`Schedule generated successfully for ${numWorkers} workers!`);
                     
                 } catch (error) {
                     showError('Error generating schedule: ' + error.message);
@@ -812,7 +812,7 @@
             }, 100);
         }
 
-        function displaySchedule(schedule, employeeNames) {
+        function displaySchedule(schedule, workerNames) {
             const outputEl = document.getElementById('scheduleOutput');
             
             if (schedule.length === 0) {
@@ -827,13 +827,13 @@
                 html += `<div class="round-header">Round ${roundIndex + 1}</div>`;
                 
                 round.forEach((pair, pairIndex) => {
-                    const pairNames = pair.map(emp =>
-                        employeeNames ? (emp === 'BYE' ? 'BYE' : employeeNames[emp - 1]) : `Employee ${emp}`
+                    const pairNames = pair.map(worker =>
+                        workerNames ? (worker === 'BYE' ? 'BYE' : workerNames[worker - 1]) : `Worker ${worker}`
                     );
                     
                     html += `<div class="shift-pair">`;
                     html += `<span class="shift-label">Shift ${pairIndex + 1}</span>`;
-                    html += `<span class="shift-employees">${pairNames[0]} & ${pairNames[1]}</span>`;
+                    html += `<span class="shift-workers">${pairNames[0]} & ${pairNames[1]}</span>`;
                     html += `</div>`;
                 });
                 
@@ -856,8 +856,8 @@
             
             let statsHtml = `
                 <div class="stat-item">
-                    <div class="stat-value">${stats.totalEmployees}</div>
-                    <div class="stat-label">Total Employees</div>
+                    <div class="stat-value">${stats.totalWorkers}</div>
+                    <div class="stat-label">Total Workers</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value">${stats.totalRounds}</div>
@@ -883,7 +883,7 @@
 
         function clearOutput() {
             document.getElementById('scheduleOutput').innerHTML =
-                '<div style="text-align: center; color: #7f8c8d; padding: 50px;">Enter the number of employees and click "Generate Schedule" to create your schedule.</div>';
+                '<div style="text-align: center; color: #7f8c8d; padding: 50px;">Enter the number of workers and click "Generate Schedule" to create your schedule.</div>';
             document.getElementById('statsSection').style.display = 'none';
         }
 
@@ -933,7 +933,7 @@
             const scheduleOutput = document.getElementById('scheduleOutput');
             const statsSection = document.getElementById('statsSection');
             
-            if (scheduleOutput.innerHTML.includes('Enter the number of employees')) {
+            if (scheduleOutput.innerHTML.includes('Enter the number of workers')) {
                 showError('No schedule to print. Please generate a schedule first.');
                 return;
             }
@@ -947,16 +947,16 @@
             }, 500);
         }
 
-        // Auto-sync employee count with names
-        function syncEmployeeCount() {
-            const employeeNamesInput = document.getElementById('employeeNames');
-            const numEmployeesInput = document.getElementById('numEmployees');
-            
-            const names = parseEmployeeNames(employeeNamesInput.value);
-            
+        // Auto-sync worker count with names
+        function syncWorkerCount() {
+            const workerNamesInput = document.getElementById('workerNames');
+            const numWorkersInput = document.getElementById('numWorkers');
+
+            const names = parseWorkerNames(workerNamesInput.value);
+
             if (names && names.length > 0) {
-                // Update the number of employees to match the names count
-                numEmployeesInput.value = names.length;
+                // Update the number of workers to match the names count
+                numWorkersInput.value = names.length;
             }
         }
 
@@ -989,10 +989,10 @@
         document.getElementById('printBtn').addEventListener('click', printSchedule);
         document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
         document.getElementById('algorithm').addEventListener('change', updateAlgorithmDescription);
-        document.getElementById('employeeNames').addEventListener('blur', syncEmployeeCount);
-        
+        document.getElementById('workerNames').addEventListener('blur', syncWorkerCount);
+
         // Allow Enter key to trigger generation
-        document.getElementById('numEmployees').addEventListener('keypress', function(e) {
+        document.getElementById('numWorkers').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 generateScheduleUI();
             }

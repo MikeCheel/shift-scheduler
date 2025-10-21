@@ -1,5 +1,5 @@
 /**
- * Test script for Employee Schedule Generator
+ * Test script for Worker Schedule Generator
  */
 
 const {
@@ -12,62 +12,62 @@ const {
 /**
  * Comprehensive test function
  */
-function testSchedule(numEmployees, useCircleMethod = false) {
+function testSchedule(numWorkers, useCircleMethod = false) {
     console.log(`\n${'='.repeat(50)}`);
-    console.log(`TESTING WITH ${numEmployees} EMPLOYEES`);
+    console.log(`TESTING WITH ${numWorkers} WORKERS`);
     console.log(`${'='.repeat(50)}`);
     
     try {
-        const schedule = useCircleMethod 
-            ? generateScheduleCircleMethod(numEmployees)
-            : generateSchedule(numEmployees);
+        const schedule = useCircleMethod
+            ? generateScheduleCircleMethod(numWorkers)
+            : generateSchedule(numWorkers);
         
         // Display the schedule
-        const employeeNames = Array.from({length: numEmployees}, (_, i) => 
+        const workerNames = Array.from({length: numWorkers}, (_, i) =>
             String.fromCharCode(65 + i) // A, B, C, ...
         );
         
-        console.log(formatSchedule(schedule, employeeNames));
+        console.log(formatSchedule(schedule, workerNames));
         
         // Verify the schedule
-        verifySchedule(schedule, numEmployees);
+        verifySchedule(schedule, numWorkers);
         
     } catch (error) {
-        console.error(`❌ Error with ${numEmployees} employees:`, error.message);
+        console.error(`❌ Error with ${numWorkers} workers:`, error.message);
     }
 }
 
 /**
  * Verify schedule meets all requirements
  */
-function verifySchedule(schedule, originalEmployeeCount) {
+function verifySchedule(schedule, originalWorkerCount) {
     console.log("\n--- VERIFICATION ---");
     
     const allPairs = new Set();
-    const employeeShifts = {};
-    const allEmployees = new Set();
+    const workerShifts = {};
+    const allWorkers = new Set();
     
     // Initialize shift counts
-    for (let i = 1; i <= originalEmployeeCount; i++) {
-        employeeShifts[i] = 0;
-        allEmployees.add(i);
+    for (let i = 1; i <= originalWorkerCount; i++) {
+        workerShifts[i] = 0;
+        allWorkers.add(i);
     }
     
     let isValid = true;
     
     // Check each round
     schedule.forEach((round, roundIndex) => {
-        const employeesInRound = new Set();
+        const workersInRound = new Set();
         
         round.forEach(pair => {
-            // Count shifts for real employees (not BYE)
+            // Count shifts for real workers (not BYE)
             if (!pair.includes('BYE')) {
-                employeeShifts[pair[0]]++;
-                employeeShifts[pair[1]]++;
+                workerShifts[pair[0]]++;
+                workerShifts[pair[1]]++;
                 
-                // Track employees in this round
-                employeesInRound.add(pair[0]);
-                employeesInRound.add(pair[1]);
+                // Track workers in this round
+                workersInRound.add(pair[0]);
+                workersInRound.add(pair[1]);
                 
                 // Check for duplicate pairs
                 const sortedPair = [...pair].sort((a, b) => a - b);
@@ -81,18 +81,18 @@ function verifySchedule(schedule, originalEmployeeCount) {
             }
         });
         
-        // For odd employee count, rounds may have different sizes
-        if (originalEmployeeCount % 2 === 0) {
-            // Even count: all employees should appear exactly once per round
-            if (employeesInRound.size !== originalEmployeeCount) {
-                console.error(`❌ Round ${roundIndex + 1} doesn't include all employees`);
+        // For odd worker count, rounds may have different sizes
+        if (originalWorkerCount % 2 === 0) {
+            // Even count: all workers should appear exactly once per round
+            if (workersInRound.size !== originalWorkerCount) {
+                console.error(`❌ Round ${roundIndex + 1} doesn't include all workers`);
                 isValid = false;
             }
         }
     });
     
-    // Check if all employees have fair distribution of shifts
-    const shiftCounts = Object.values(employeeShifts);
+    // Check if all workers have fair distribution of shifts
+    const shiftCounts = Object.values(workerShifts);
     const minShifts = Math.min(...shiftCounts);
     const maxShifts = Math.max(...shiftCounts);
     
@@ -104,7 +104,7 @@ function verifySchedule(schedule, originalEmployeeCount) {
     }
     
     // Check if we have all possible pairs
-    const expectedPairs = originalEmployeeCount * (originalEmployeeCount - 1) / 2;
+    const expectedPairs = originalWorkerCount * (originalWorkerCount - 1) / 2;
     if (allPairs.size === expectedPairs) {
         console.log(`✅ All ${expectedPairs} possible pairs are unique and complete`);
     } else {
@@ -112,14 +112,14 @@ function verifySchedule(schedule, originalEmployeeCount) {
         isValid = false;
     }
     
-    // Check no employee works consecutive rounds without break (for even counts)
-    if (originalEmployeeCount % 2 === 0) {
-        const consecutiveWork = checkConsecutiveWork(schedule, originalEmployeeCount);
+    // Check no worker works consecutive rounds without break (for even counts)
+    if (originalWorkerCount % 2 === 0) {
+        const consecutiveWork = checkConsecutiveWork(schedule, originalWorkerCount);
         if (consecutiveWork.length > 0) {
-            console.error(`❌ Employees working consecutive rounds:`, consecutiveWork);
+            console.error(`❌ Workers working consecutive rounds:`, consecutiveWork);
             isValid = false;
         } else {
-            console.log(`✅ No employees work consecutive rounds`);
+            console.log(`✅ No workers work consecutive rounds`);
         }
     }
     
@@ -128,24 +128,24 @@ function verifySchedule(schedule, originalEmployeeCount) {
 }
 
 /**
- * Check if any employees work consecutive rounds
+ * Check if any workers work consecutive rounds
  */
-function checkConsecutiveWork(schedule, employeeCount) {
+function checkConsecutiveWork(schedule, workerCount) {
     const lastRoundWorked = {};
     const consecutiveWorkers = [];
     
-    for (let i = 1; i <= employeeCount; i++) {
+    for (let i = 1; i <= workerCount; i++) {
         lastRoundWorked[i] = -2; // Initialize to ensure first round doesn't flag
     }
     
     schedule.forEach((round, roundIndex) => {
-        const roundEmployees = new Set(round.flat().filter(emp => typeof emp === 'number'));
+        const roundWorkers = new Set(round.flat().filter(worker => typeof worker === 'number'));
         
-        roundEmployees.forEach(emp => {
-            if (lastRoundWorked[emp] === roundIndex - 1) {
-                consecutiveWorkers.push({ employee: emp, rounds: [lastRoundWorked[emp], roundIndex] });
+        roundWorkers.forEach(worker => {
+            if (lastRoundWorked[worker] === roundIndex - 1) {
+                consecutiveWorkers.push({ worker: worker, rounds: [lastRoundWorked[worker], roundIndex] });
             }
-            lastRoundWorked[emp] = roundIndex;
+            lastRoundWorked[worker] = roundIndex;
         });
     });
     
@@ -156,7 +156,7 @@ function checkConsecutiveWork(schedule, employeeCount) {
  * Run comprehensive tests
  */
 function runAllTests() {
-    console.log("EMPLOYEE SCHEDULE GENERATOR - COMPREHENSIVE TESTS");
+    console.log("WORKER SCHEDULE GENERATOR - COMPREHENSIVE TESTS");
     console.log("=".repeat(60));
     
     // Test even numbers
@@ -164,7 +164,7 @@ function runAllTests() {
         testSchedule(count);
     });
     
-    // Test odd numbers  
+    // Test odd numbers
     [3, 5, 7].forEach(count => {
         testSchedule(count);
     });
@@ -174,12 +174,12 @@ function runAllTests() {
     console.log("EDGE CASE TESTS");
     console.log(`${'='.repeat(50)}`);
     
-    // Test single employee (should error)
+    // Test single worker (should error)
     try {
         generateSchedule(1);
-        console.error("❌ Expected error for 1 employee");
+        console.error("❌ Expected error for 1 worker");
     } catch (e) {
-        console.log("✅ Correctly handled 1 employee:", e.message);
+        console.log("✅ Correctly handled 1 worker:", e.message);
     }
     
     // Test very small odd number
@@ -207,21 +207,21 @@ function runAllTests() {
 /**
  * Quick test for specific count
  */
-function quickTest(numEmployees, useNames = true) {
-    const schedule = generateSchedule(numEmployees);
-    let employeeNames = null;
+function quickTest(numWorkers, useNames = true) {
+    const schedule = generateSchedule(numWorkers);
+    let workerNames = null;
     
     if (useNames) {
-        employeeNames = Array.from({length: numEmployees}, (_, i) => 
+        workerNames = Array.from({length: numWorkers}, (_, i) =>
             String.fromCharCode(65 + i)
         );
     }
     
-    console.log(formatSchedule(schedule, employeeNames));
+    console.log(formatSchedule(schedule, workerNames));
     
     const stats = getScheduleStats(schedule);
     console.log("\n--- STATISTICS ---");
-    console.log(`Employees: ${stats.totalEmployees}`);
+    console.log(`Workers: ${stats.totalWorkers}`);
     console.log(`Rounds: ${stats.totalRounds}`);
     console.log(`Shifts per round: ${stats.shiftsPerRound}`);
     console.log(`Unique pairs: ${stats.totalUniquePairs}/${stats.expectedPairs}`);
@@ -243,11 +243,11 @@ if (require.main === module) {
         // Quick generate for specific count
         const count = parseInt(args[0]);
         if (isNaN(count) || count < 2) {
-            console.log("Usage: node test-schedule.js [employee_count|test]");
+            console.log("Usage: node test-schedule.js [worker_count|test]");
             console.log("Examples:");
             console.log("  node test-schedule.js          # Run all tests");
-            console.log("  node test-schedule.js 6        # Generate schedule for 6 employees");
-            console.log("  node test-schedule.js test 7   # Test with 7 employees");
+            console.log("  node test-schedule.js 6        # Generate schedule for 6 workers");
+            console.log("  node test-schedule.js test 7   # Test with 7 workers");
         } else {
             quickTest(count);
         }
