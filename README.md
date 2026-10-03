@@ -5,19 +5,24 @@
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26.svg?logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6.svg?logo=css3&logoColor=white)
 
-A modern web application for generating fair and balanced work schedules using round-robin pairing algorithms, featuring the **Circle Algorithm** as the default method. Perfect for businesses, sports teams, and organizations that need to create rotating shift schedules.
+A web application that generates two-person shift schedules where every pair of workers shares exactly one shift, nobody works two shifts in a row, and each worker gets as much rest as possible between their shifts.
+
+**▶ [Open the Shift Scheduler](https://mikecheel.github.io/shift-scheduler/)** — runs in your browser, nothing to install.
 
 ## 🚀 Features
 
-- **📅 Two Scheduling Algorithms** - Choose between Standard Round-Robin and **Circle Method** (default)
+- **📅 Fair pairing** - Every pair of workers shares exactly one shift (circle method)
+- **😴 Rest between shifts** - No back-to-back shifts for 5+ workers; each worker's shifts are spread out (as far apart as possible for an even number of workers in pairs, within one shift of that for an odd number)
 - **🌙 Dark Mode Support** - Toggle between light and dark themes with system preference detection
 - **👥 Custom Worker Names** - Optionally use real worker names instead of generic ones
-- **📊 Schedule Statistics** - View comprehensive statistics including unique pairs and shift distribution
+- **📊 Schedule Statistics** - Unique pairs, back-to-back count, minimum and average rest, plus a per-worker table
+- **💾 Save & Open** - Save schedules in the browser, or download them as a file and open the file again on any device
+- **🗓️ Date & Description** - Optionally label a schedule; the label shows on screen, in print and in the saved list
+- **👥 Workers per shift** - Two by default; choose any size up to the team size
 - **🖨️ Print Functionality** - Professional print layout optimized for paper
 - **📱 Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
 - **⚡ Real-time Updates** - Auto-sync worker count with names for convenience
 - **🧪 Comprehensive Test Suite** - Full test coverage with validation for schedule completeness and fairness
-- **🔄 Fair BYE Rotation** - Intelligent break assignment for odd numbers of workers using backtracking
 
 ## 🎯 Quick Start
 
@@ -27,10 +32,10 @@ Simply open `index.html` in any modern web browser - no installation required!
 ### Option 2: Local Development
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/shift-scheduler-2.git
+git clone <your-repository-url>
 
 # Navigate to the project directory
-cd shift-scheduler-2
+cd shift-scheduler
 
 # Open the application
 start index.html  # Windows
@@ -43,11 +48,10 @@ xdg-open index.html  # Linux
 ## 📖 Usage Guide
 
 ### Basic Usage
-1. **Enter Number of Workers**: Input the total number of workers (minimum 2, maximum 50)
+1. **Enter Number of Workers**: Input the total number of workers (minimum 2, maximum 50), and optionally how many work each shift (default 2)
 2. **Add Worker Names** (Optional): Enter names one per line or comma-separated
-3. **Select Algorithm**: Choose between Standard Round-Robin or **Circle Method** (recommended)
-4. **Generate Schedule**: Click "Generate Schedule" to create the rotation
-5. **Print or Clear**: Use "Print Schedule" or "Clear Schedule" as needed
+3. **Generate Schedule**: Click "Generate Schedule" to create the rotation
+4. **Print or Clear**: Use "Print Schedule" or "Clear Schedule" as needed
 
 ### Advanced Features
 
@@ -55,10 +59,6 @@ xdg-open index.html  # Linux
 - Click the moon/sun icon in the top-right corner
 - Theme preference is saved automatically
 - Supports system-level dark mode detection
-
-#### Algorithm Selection
-- **Circle Method** (Default & Recommended): More intuitive, produces complete schedules, easier to understand
-- **Standard Round-Robin**: Mathematical approach, better for very large teams
 
 #### Worker Names
 - Leave empty for generic names (Worker 1, Worker 2, etc.)
@@ -68,12 +68,11 @@ xdg-open index.html  # Linux
 ## 🏗️ Project Structure
 
 ```
-shift-scheduler-2/
+shift-scheduler/
 ├── README.md                 # Project documentation
 ├── LICENSE                   # MIT License
 ├── .gitignore               # Git ignore rules
 ├── package.json             # Project configuration
-├── ai-todos.md              # Development tracking
 ├── index.html               # Main application file
 └── src/
     ├── scripts/
@@ -89,71 +88,40 @@ shift-scheduler-2/
 node src/tests/schedule-generator-tests.js
 ```
 
-The test suite validates:
-- Schedule completeness and fairness
-- Unique pair generation
-- Shift distribution equality
-- Algorithm correctness for various team sizes
-- Fair BYE rotation for odd numbers
-- No consecutive work assignments
-- Complete coverage of all possible worker pairs
-
-### Test Commands
+The test suite validates, for team sizes 3-30:
+- Every pair of workers appears exactly once
+- Every worker works the same number of shifts
+- No back-to-back shifts (5+ workers; unavoidable at 3-4)
+- Minimum and average rest between a worker's shifts
 
 ```bash
-# Run all comprehensive tests
-node src/tests/schedule-generator-tests.js
-
-# Test specific number of workers
-node src/tests/schedule-generator-tests.js 6
-
-# Run validation test for specific count
-node src/tests/schedule-generator-tests.js test 7
+node src/tests/schedule-generator-tests.js      # all checks
+node src/tests/schedule-generator-tests.js 7    # one team size
 ```
-
-The test suite includes edge case testing, algorithm comparison, and comprehensive validation to ensure schedule quality and fairness.
 
 ## 🔧 Technical Details
 
-### Algorithms Implemented
+### How it works
 
-#### Circle Method (Default)
-- Uses physical rotation of worker array
-- More intuitive and easier to understand
-- Produces complete schedules for all team sizes
-- Recommended for most use cases
-- Based on the circle method for round-robin tournaments
+Generation has two steps (see `src/scripts/schedule-generator.js`):
 
-#### Standard Round-Robin
-- Uses mathematical indexing with modulo operations
-- More computationally elegant
-- Better performance with very large teams
+1. **Pairing** - the circle method produces every pair exactly once. An odd number of workers rotates; each round one of them sits out and the rest pair up by distance from them, so each worker's position barely moves between rounds and their shifts end up about N/2 apart. With an even team the extra worker partners whoever sits out.
+2. **Ordering** - the shifts are then reordered if that spaces them out more. A depth-first search tries for a minimum number of shifts between a worker's shifts, starting at an upper bound and stepping down, with a few attempts and a step budget per target. It keeps the starting order unless it finds a better one.
 
-### Fair BYE Rotation System
+3. **Fairness** - shifts are then reordered so rest is shared out evenly. The minimum rest never drops and no gap grows more than one shift past the longest one. In order of importance: no extra back-to-back shifts, the same number of long breaks for everyone, few short breaks (first for the worker with the most, then overall), short breaks spread evenly, no oversized gaps, then breaks close to the ideal spacing. Schedules up to 120 shifts get a budgeted exhaustive search; every schedule then gets a local search. Perfect fairness is often impossible (for example with 6 workers in pairs); the search finds the fairest order it can within about a second.
+4. **Numbering** - workers are numbered in the order they first appear, so the opening shifts follow the worker list (1 & 2, 3 & 4, ...).
 
-For odd numbers of workers, the scheduler implements a **Fair BYE Rotation System** that ensures:
+The upper bound is about N/2 - 1 shifts (N/k - 1 for groups of k), one less when the groups split the team exactly. It is a ceiling, not a promise. For pairs the starting order already reaches it with an even team and is at most one short with an odd team. The search sometimes closes that last step.
 
-- **Equal Breaks**: Each worker gets exactly one break (paired with BYE) during the schedule
-- **Fair Distribution**: No worker is paired with BYE again until all workers have had their turn
-- **Complete Pairings**: All possible worker pairs are created exactly once
-- **Balanced Workload**: Equal distribution of shifts among all workers
+With 3 or 4 workers in pairs, back-to-back shifts cannot be avoided; the stats panel says so.
 
-**How it works:**
-1. When there are odd numbers of workers, one worker gets a break (BYE) each round
-2. The system tracks which workers have had breaks using a backtracking algorithm
-3. Workers are rotated through BYE assignments in a fair sequence
-4. The algorithm ensures all possible pair combinations are created
-5. Each worker works the same number of shifts (n-1 for n workers)
+**1 worker per shift:** there are no pairs, so workers simply take turns in order (1, 2, 3, 1, 2, 3, ...), which gives everyone the most rest possible. Choose the number of shifts, or leave it empty for one round. The pairing statistics are hidden in this mode.
 
-**Example with 5 workers:**
-- Round 1: Worker 1 gets BYE, others work in pairs
-- Round 2: Worker 2 gets BYE, others work in pairs
-- Round 3: Worker 3 gets BYE, others work in pairs
-- Round 4: Worker 4 gets BYE, others work in pairs
-- Round 5: Worker 5 gets BYE, others work in pairs
+**More than 2 workers per shift:** a shift is a group, and every pair of workers must still share a shift at least once. Exact fits are rare, so groups are built greedily to cover all pairs with as few repeats as possible, and the stats panel reports repeated pairs. Back-to-back shifts are still avoided where possible, but with large shifts relative to the team they can't always be.
 
-**Backtracking Algorithm:**
-For odd numbers, the system uses a backtracking approach to find valid pairings that haven't been used in previous rounds, ensuring complete coverage of all possible worker combinations.
+### Saving
+
+Saved schedules live in your browser's local storage, so they stay on that device. Use Download File / Open File… to move one to another device or keep a backup.
 
 ### Browser Compatibility
 - Chrome 60+
@@ -175,8 +143,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Circle Method** implementation for round-robin scheduling
-- **Fair BYE Rotation System** for odd number of workers
+- **Circle Method** for round-robin pairing
 - Round-robin scheduling based on tournament pairing principles
 - Modern UI design inspired by current web standards
 - Test-driven development approach for reliability

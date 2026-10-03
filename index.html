@@ -15,6 +15,7 @@
             --header-bg: linear-gradient(135deg, #2c3e50, #34495e);
             --section-bg: #f8f9fa;
             --shadow-color: rgba(0, 0, 0, 0.2);
+            --muted-color: #6c757d;
         }
 
         [data-theme="dark"] {
@@ -25,6 +26,7 @@
             --header-bg: linear-gradient(135deg, #0d1117, #161b22);
             --section-bg: #2d2d2d;
             --shadow-color: rgba(0, 0, 0, 0.4);
+            --muted-color: #adb5bd;
         }
 
         * {
@@ -159,8 +161,6 @@
             border-radius: 8px;
             padding: 25px;
             min-height: 400px;
-            max-height: 600px;
-            overflow-y: auto;
             border: 2px solid var(--input-border);
             transition: all 0.3s ease;
         }
@@ -203,7 +203,70 @@
         }
 
         .shift-workers {
-            color: #7f8c8d;
+            color: var(--muted-color);
+        }
+
+        .shift-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .shift-date {
+            width: auto;
+            padding: 4px 8px;
+            font-size: 13px;
+            border-width: 1px;
+            border-radius: 6px;
+        }
+
+        .date-fill {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 10px;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background: var(--section-bg);
+            border-radius: 8px;
+        }
+
+        .date-fill[hidden] {
+            display: none;
+        }
+
+        .date-fill label {
+            display: inline;
+            margin: 0;
+        }
+
+        .date-fill input, .date-fill select {
+            width: auto;
+            padding: 6px 8px;
+        }
+
+        .date-fill #fillEvery {
+            width: 70px;
+        }
+
+        .shift-date-clear {
+            background: none;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            padding: 6px 8px;
+        }
+
+        .shift-date-clear:hover {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+
+        .shift-date.is-empty + .shift-date-clear {
+            display: none;
         }
 
         .stats-section {
@@ -238,30 +301,35 @@
             margin-bottom: 5px;
         }
 
+        .stats-title {
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+
         .stat-label {
             font-size: 0.9rem;
-            color: #7f8c8d;
+            color: var(--muted-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .error-message {
-            background: #ffeaa7;
-            color: #d63031;
+            background: #f8d7da;
+            color: #842029;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #fdcb6e;
+            border-left: 4px solid #dc3545;
             display: none;
         }
 
         .success-message {
-            background: #55efc4;
-            color: #00b894;
+            background: #d1e7dd;
+            color: #0f5132;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border-left: 4px solid #00b894;
+            border-left: 4px solid #198754;
             display: none;
         }
 
@@ -289,22 +357,199 @@
 
         .worker-names-hint {
             font-size: 0.85rem;
-            color: #7f8c8d;
+            color: var(--muted-color);
             margin-top: 5px;
         }
 
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .schedule-title {
+            margin-bottom: 20px;
+        }
+
+        .schedule-title h2 {
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        .schedule-subtitle {
+            color: var(--text-color);
+            opacity: 0.75;
+            overflow-wrap: anywhere;
+        }
+
+        .shift-label {
+            color: var(--text-color);
+        }
+
+        .saved-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--input-border);
+        }
+
+        .saved-section h3 {
+            margin-bottom: 10px;
+        }
+
+        .saved-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+        }
+
+        .saved-item.is-current {
+            border: 2px solid var(--primary-color);
+        }
+
+        .saved-item-current {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .saved-item-text {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .saved-item-title {
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .saved-item-meta {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .saved-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            width: auto;
+            padding: 8px 14px;
+            font-size: 14px;
+            min-height: 40px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e55353, #c0392b);
+        }
+
+        .saved-note {
+            margin: 0 0 12px;
+        }
+
+        .saved-empty {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 8px;
+            }
+
             .content {
                 grid-template-columns: 1fr;
+                min-height: 0;
             }
-            
+
             .input-section {
                 border-right: none;
                 border-bottom: 1px solid var(--input-border);
             }
-            
+
+            .input-section, .output-section {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 20px 56px 20px 16px;
+            }
+
             .header h1 {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.95rem;
+            }
+
+            .theme-toggle {
+                top: 12px;
+                right: 12px;
+            }
+
+            /* 16px stops iOS from zooming into fields; taller controls are easier to tap */
+            input, textarea, select {
+                font-size: 16px;
+            }
+
+            .btn {
+                min-height: 48px;
+            }
+
+            .btn-small {
+                min-height: 44px;
+            }
+
+            .schedule-output {
+                padding: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            }
+
+            .shift-pair {
+                flex-wrap: wrap;
+                gap: 4px 12px;
+            }
+
+            .shift-info {
+                flex-wrap: wrap;
+                gap: 4px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .button-group, .field-row {
+                grid-template-columns: 1fr;
+            }
+
+            .saved-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .saved-item-actions .btn-small {
+                flex: 1;
             }
         }
 
@@ -332,20 +577,75 @@
             transform: scale(1.1);
         }
 
-        /* Algorithm descriptions */
-        .algorithm-description {
-            margin-top: 8px;
-            padding: 12px;
-            background: var(--section-bg);
-            border-radius: 6px;
-            border-left: 3px solid var(--primary-color);
-            font-size: 0.9rem;
-            color: var(--text-color);
-            display: none;
+        .worker-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .algorithm-description.active {
-            display: block;
+        .worker-table th, .worker-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .worker-table .timeline-cell {
+            width: 55%;
+            min-width: 220px;
+        }
+
+        .rest-timeline {
+            display: flex;
+            gap: 1px;
+            height: 22px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .rest-timeline span {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .tl-work {
+            background: var(--primary-color);
+        }
+
+        .tl-off {
+            background: var(--input-border);
+            color: var(--text-color);
+            font-size: 11px;
+            line-height: 22px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .tl-off.tl-edge {
+            background: transparent;
+            border: 1px dashed var(--input-border);
+        }
+
+        .tl-work.tl-b2b {
+            background: #dc3545;
+        }
+
+        .timeline-legend {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 6px;
+            margin: 0 0 8px;
+        }
+
+        .tl-key {
+            display: inline-block;
+            width: 14px;
+            height: 10px;
+            border-radius: 2px;
+            margin-left: 8px;
+        }
+
+        .tl-key:first-child {
+            margin-left: 0;
         }
 
         /* Button group */
@@ -374,6 +674,17 @@
 
         /* Print styles */
         @media print {
+            /* Always print in the light theme. */
+            :root, [data-theme="dark"] {
+                --text-color: #333;
+                --bg-color: white;
+                --input-bg: white;
+                --input-border: #e9ecef;
+                --section-bg: #f8f9fa;
+                --shadow-color: rgba(0, 0, 0, 0.2);
+                --muted-color: #6c757d;
+            }
+
             body {
                 background: white !important;
                 padding: 0 !important;
@@ -385,6 +696,7 @@
                 border-radius: 0 !important;
                 max-width: none !important;
                 margin: 0 !important;
+                overflow: visible !important; /* hidden clips content that runs across pages */
             }
             
             .header {
@@ -409,8 +721,10 @@
                 padding: 20px !important;
             }
             
+            /* Sections may split across pages (a long list would otherwise jump to the
+               next page and leave this one blank); single rows stay whole. */
             .schedule-round {
-                page-break-inside: avoid;
+                page-break-inside: auto;
                 page-break-after: auto;
                 margin-bottom: 30px;
                 padding-bottom: 15px;
@@ -443,8 +757,32 @@
                 page-break-inside: avoid;
             }
             
-            .theme-toggle, .btn {
+            .theme-toggle, .btn, .shift-date.is-empty, .shift-date-clear, .date-fill {
                 display: none !important;
+            }
+
+            .worker-table tr, .timeline-legend {
+                page-break-inside: avoid;
+            }
+
+            .worker-table thead {
+                display: table-header-group; /* repeat the header on each page */
+            }
+
+            .rest-timeline span, .tl-key {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .shift-date {
+                border: none !important;
+                background: none !important;
+                padding: 0 !important;
+                color: #2c3e50 !important;
+            }
+
+            .schedule-title h2, .schedule-subtitle, .shift-label, .stats-title {
+                color: #2c3e50 !important;
             }
             
             .stats-section {
@@ -452,13 +790,13 @@
                 border-left: 4px solid #667eea !important;
                 page-break-inside: avoid;
                 page-break-before: auto;
-                margin-top: 40px;
-                padding: 25px !important;
+                margin: 30px 20px 0; /* line up with the schedule above */
+                padding: 20px !important;
             }
             
             .stats-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
                 gap: 12px;
                 margin-top: 15px;
             }
@@ -468,7 +806,8 @@
                 padding: 12px;
                 background: white !important;
                 border-radius: 4px;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e9ecef;
+                box-shadow: none !important;
                 page-break-inside: avoid;
             }
             
@@ -513,9 +852,24 @@
                 <div class="error-message" id="errorMessage"></div>
                 <div class="success-message" id="successMessage"></div>
                 
-                <div class="form-group">
-                    <label for="numWorkers">Number of Workers *</label>
-                    <input type="number" id="numWorkers" min="2" max="50" value="4" required>
+                <div class="field-row">
+                    <div class="form-group">
+                        <label for="numWorkers">Number of Workers *</label>
+                        <input type="number" id="numWorkers" min="2" max="50" value="4" inputmode="numeric" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="workersPerShift">Workers per Shift</label>
+                        <input type="number" id="workersPerShift" min="1" max="50" value="2" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-group" id="numShiftsGroup" hidden>
+                    <label for="numShifts">Number of Shifts</label>
+                    <input type="number" id="numShifts" min="1" max="1000" inputmode="numeric" placeholder="One round (each worker once)">
+                    <div class="worker-names-hint">
+                        With 1 worker per shift, workers take turns in order. Leave empty for one round.
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -527,21 +881,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="algorithm">Scheduling Algorithm</label>
-                    <select id="algorithm">
-                        <option value="standard">Standard Round-Robin</option>
-                        <option value="circle" selected>Circle Method</option>
-                    </select>
-                    
-                    <div class="algorithm-description" id="standardDescription">
-                        <strong>Standard Round-Robin:</strong> Uses mathematical indexing with modulo operations. More computationally elegant but harder to understand. Best for performance with large worker counts.
-                    </div>
-                    
-                    <div class="algorithm-description" id="circleDescription">
-                        <strong>Circle Method:</strong> Uses physical rotation of the worker array. More intuitive and visually clear. Easier to debug and understand. Recommended for most use cases.
-                    </div>
+                    <label for="scheduleDate">Date (Optional)</label>
+                    <input type="date" id="scheduleDate">
                 </div>
-                
+
+                <div class="form-group">
+                    <label for="scheduleDescription">Description (Optional)</label>
+                    <input type="text" id="scheduleDescription" maxlength="100" placeholder="e.g. Weekend kitchen crew">
+                </div>
+
                 <div class="button-group">
                     <button class="btn" id="generateBtn">
                         Generate Schedule
@@ -552,9 +900,31 @@
                 </div>
                 
                 <div class="button-group" style="margin-top: 10px;">
+                    <button class="btn btn-tertiary" id="saveBtn">
+                        Save in Browser
+                    </button>
                     <button class="btn btn-tertiary" id="printBtn">
                         Print Schedule
                     </button>
+                </div>
+
+                <button class="btn btn-secondary btn-small" id="saveAsNewBtn" style="width: 100%; margin-top: 10px;" hidden>
+                    Save as New Copy
+                </button>
+
+                <button class="btn btn-secondary" id="newScheduleBtn" style="margin-top: 10px;">
+                    New Schedule
+                </button>
+
+                <div class="saved-section">
+                    <h3>Saved Schedules</h3>
+                    <p class="worker-names-hint saved-note">Saved in this browser only. Use Download File to keep a backup or move a schedule to another device.</p>
+                    <div id="savedList"></div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary btn-small" id="exportBtn">Download File</button>
+                        <button class="btn btn-secondary btn-small" id="importBtn">Open File…</button>
+                    </div>
+                    <input type="file" id="importFile" accept=".json,application/json" style="display: none;">
                 </div>
                 
                 <div class="loading" id="loading">
@@ -570,15 +940,30 @@
             </div>
             
             <div class="output-section">
-                <h2 style="margin-bottom: 20px; color: #2c3e50;">Generated Schedule</h2>
+                <div class="schedule-title">
+                    <h2>Generated Schedule</h2>
+                    <div class="schedule-subtitle" id="scheduleSubtitle"></div>
+                </div>
+                <div class="date-fill" id="dateFill" hidden>
+                    <label for="fillStart">Fill dates from</label>
+                    <input type="date" id="fillStart">
+                    <label for="fillEvery">every</label>
+                    <input type="number" id="fillEvery" min="1" max="365" value="1" inputmode="numeric">
+                    <select id="fillUnit" aria-label="Unit">
+                        <option value="1">day(s)</option>
+                        <option value="7">week(s)</option>
+                    </select>
+                    <button type="button" class="btn btn-small" id="fillDatesBtn">Fill Dates</button>
+                    <button type="button" class="btn btn-secondary btn-small" id="clearDatesBtn">Clear Dates</button>
+                </div>
                 <div class="schedule-output" id="scheduleOutput">
-                    <div style="text-align: center; color: #7f8c8d; padding: 50px;">
+                    <div style="text-align: center; color: var(--muted-color); padding: 50px;">
                         <p>Enter the number of workers and click "Generate Schedule" to create your schedule.</p>
                     </div>
                 </div>
                 
                 <div class="stats-section" id="statsSection" style="display: none;">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Schedule Statistics</h3>
+                    <h3 class="stats-title">Schedule Statistics</h3>
                     <div class="stats-grid" id="statsGrid">
                         <!-- Stats will be populated here -->
                     </div>
@@ -587,143 +972,8 @@
         </div>
     </div>
 
+    <script src="src/scripts/schedule-generator.js"></script>
     <script>
-        // Include the schedule generator functions directly
-        function generateSchedule(numWorkers) {
-            if (numWorkers < 2) {
-                throw new Error("Number of workers must be at least 2");
-            }
-
-            const workers = Array.from({length: numWorkers}, (_, i) => i + 1);
-            const isOdd = numWorkers % 2 !== 0;
-
-            if (isOdd) {
-                workers.push('BYE');
-                numWorkers += 1;
-            }
-
-            const totalRounds = numWorkers - 1;
-            const shiftsPerRound = numWorkers / 2;
-            const schedule = [];
-            
-            for (let round = 0; round < totalRounds; round++) {
-                const roundPairs = [];
-                roundPairs.push([workers[0], workers[numWorkers - 1]]);
-
-                for (let i = 1; i < shiftsPerRound; i++) {
-                    const firstIndex = 1 + ((round + i - 1) % (numWorkers - 1));
-                    const secondIndex = 1 + ((round + numWorkers - 2 - i) % (numWorkers - 1));
-
-                    roundPairs.push([workers[firstIndex], workers[secondIndex]]);
-                }
-                
-                if (isOdd) {
-                    const filteredPairs = roundPairs.filter(pair => !pair.includes('BYE'));
-                    schedule.push(filteredPairs);
-                } else {
-                    schedule.push(roundPairs);
-                }
-            }
-            
-            return schedule;
-        }
-
-        function generateScheduleCircleMethod(numWorkers) {
-            if (numWorkers < 2) {
-                throw new Error("Number of workers must be at least 2");
-            }
-
-            let workers = Array.from({length: numWorkers}, (_, i) => i + 1);
-            const isOdd = numWorkers % 2 !== 0;
-
-            if (isOdd) {
-                workers.push('BYE');
-                numWorkers += 1;
-            }
-
-            const totalRounds = numWorkers - 1;
-            const schedule = [];
-            
-            for (let round = 0; round < totalRounds; round++) {
-                const roundPairs = [];
-                
-                for (let i = 0; i < numWorkers / 2; i++) {
-                    roundPairs.push([workers[i], workers[numWorkers - 1 - i]]);
-                }
-                
-                if (isOdd) {
-                    const filteredPairs = roundPairs.filter(pair => !pair.includes('BYE'));
-                    schedule.push(filteredPairs);
-                } else {
-                    schedule.push(roundPairs);
-                }
-                
-                const fixed = workers[0];
-                const rotated = [fixed, workers[numWorkers - 1], ...workers.slice(1, numWorkers - 1)];
-                workers = rotated;
-            }
-            
-            return schedule;
-        }
-
-        function formatSchedule(schedule, workerNames = null) {
-            if (workerNames && workerNames.length !== Math.max(...schedule.flat(2).filter(x => typeof x === 'number'))) {
-                console.warn("Worker names count doesn't match schedule");
-                workerNames = null;
-            }
-
-            const result = [];
-            result.push("=== WORKER SCHEDULE ===");
-            result.push("");
-
-            schedule.forEach((round, roundIndex) => {
-                result.push(`Round ${roundIndex + 1}:`);
-                round.forEach((pair, pairIndex) => {
-                    const pairNames = pair.map(worker =>
-                        workerNames ? (worker === 'BYE' ? 'BYE' : workerNames[worker - 1]) : `Worker ${worker}`
-                    );
-                    result.push(`  Shift ${pairIndex + 1}: ${pairNames[0]} & ${pairNames[1]}`);
-                });
-                result.push('');
-            });
-
-            return result.join('\n');
-        }
-
-        function getScheduleStats(schedule) {
-            const allPairs = new Set();
-            const workerShifts = {};
-
-            const allWorkers = [...new Set(schedule.flat(2).filter(x => typeof x === 'number'))];
-            allWorkers.forEach(worker => { workerShifts[worker] = 0; });
-
-            schedule.forEach(round => {
-                round.forEach(pair => {
-                    if (!pair.includes('BYE')) {
-                        const sortedPair = [...pair].sort((a, b) => a - b);
-                        allPairs.add(`${sortedPair[0]}-${sortedPair[1]}`);
-
-                        workerShifts[pair[0]]++;
-                        workerShifts[pair[1]]++;
-                    }
-                });
-            });
-
-            const totalRounds = schedule.length;
-            const shiftsPerRound = schedule[0] ? schedule[0].length : 0;
-            const totalWorkers = allWorkers.length;
-
-            return {
-                totalWorkers,
-                totalRounds,
-                shiftsPerRound,
-                totalUniquePairs: allPairs.size,
-                expectedPairs: totalWorkers * (totalWorkers - 1) / 2,
-                workerShifts,
-                isComplete: allPairs.size === totalWorkers * (totalWorkers - 1) / 2
-            };
-        }
-
         // UI Functions
         function showError(message) {
             const errorEl = document.getElementById('errorMessage');
@@ -760,13 +1010,12 @@
             
             const numWorkersInput = document.getElementById('numWorkers');
             const workerNamesInput = document.getElementById('workerNames');
-            const algorithmSelect = document.getElementById('algorithm');
             const generateBtn = document.getElementById('generateBtn');
             const loadingEl = document.getElementById('loading');
             
             const numWorkers = parseInt(numWorkersInput.value);
+            const workersPerShift = parseInt(document.getElementById('workersPerShift').value || '2');
             const workerNames = parseWorkerNames(workerNamesInput.value);
-            const algorithm = algorithmSelect.value;
             
             // Validation
             if (isNaN(numWorkers) || numWorkers < 2) {
@@ -776,6 +1025,24 @@
 
             if (numWorkers > 50) {
                 showError('Maximum number of workers is 50 for optimal performance');
+                return;
+            }
+
+            if (isNaN(workersPerShift) || workersPerShift < 1) {
+                showError('Workers per shift must be at least 1');
+                return;
+            }
+
+            // Only used with 1 worker per shift; empty means one round.
+            const numShiftsText = document.getElementById('numShifts').value.trim();
+            const numShifts = numShiftsText === '' ? numWorkers : Number(numShiftsText);
+            if (workersPerShift === 1 && (!Number.isInteger(numShifts) || numShifts < 1 || numShifts > 1000)) {
+                showError('Number of shifts must be a whole number from 1 to 1000');
+                return;
+            }
+
+            if (workersPerShift > numWorkers) {
+                showError(`Workers per shift (${workersPerShift}) can't be more than the number of workers (${numWorkers})`);
                 return;
             }
 
@@ -791,16 +1058,11 @@
             // Simulate async operation for better UX
             setTimeout(() => {
                 try {
-                    let schedule;
-                    if (algorithm === 'circle') {
-                        schedule = generateScheduleCircleMethod(numWorkers);
-                    } else {
-                        schedule = generateSchedule(numWorkers);
-                    }
+                    const { schedule, minGapProvenBest } = buildSchedule(numWorkers, workersPerShift, { numShifts });
 
-                    displaySchedule(schedule, workerNames);
-                    displayStats(schedule);
-                    showSuccess(`Schedule generated successfully for ${numWorkers} workers!`);
+                    renderRecord({ numWorkers, workersPerShift, workerNames, schedule, minGapProvenBest }, { keepSavedLink: true });
+                    showSuccess(`Schedule generated successfully for ${numWorkers} workers!` +
+                        (currentSavedId !== null ? ' Click Save Changes to update the open saved schedule.' : ''));
                     
                 } catch (error) {
                     showError('Error generating schedule: ' + error.message);
@@ -812,79 +1074,484 @@
             }, 100);
         }
 
-        function displaySchedule(schedule, workerNames) {
-            const outputEl = document.getElementById('scheduleOutput');
-            
-            if (schedule.length === 0) {
-                outputEl.innerHTML = '<div style="text-align: center; color: #7f8c8d; padding: 50px;">No schedule could be generated.</div>';
-                return;
-            }
-            
-            let html = '';
-            
-            schedule.forEach((round, roundIndex) => {
-                html += `<div class="schedule-round">`;
-                html += `<div class="round-header">Round ${roundIndex + 1}</div>`;
-                
-                round.forEach((pair, pairIndex) => {
-                    const pairNames = pair.map(worker =>
-                        workerNames ? (worker === 'BYE' ? 'BYE' : workerNames[worker - 1]) : `Worker ${worker}`
-                    );
-                    
-                    html += `<div class="shift-pair">`;
-                    html += `<span class="shift-label">Shift ${pairIndex + 1}</span>`;
-                    html += `<span class="shift-workers">${pairNames[0]} & ${pairNames[1]}</span>`;
-                    html += `</div>`;
-                });
-                
-                html += `</div>`;
-            });
-            
-            outputEl.innerHTML = html;
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"']/g, ch => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         }
 
-        function displayStats(schedule) {
+        function workerNameHtml(worker, workerNames) {
+            return escapeHtml(workerNames ? workerNames[worker - 1] : `Worker ${worker}`);
+        }
+
+        function displaySchedule(schedule, workerNames, numWorkers, shiftDates) {
+            const outputEl = document.getElementById('scheduleOutput');
+
+            if (schedule.length === 0) {
+                outputEl.innerHTML = '<div style="text-align: center; color: var(--muted-color); padding: 50px;">No schedule could be generated.</div>';
+                return;
+            }
+
+            const nameOf = worker => workerNameHtml(worker, workerNames);
+
+            let html = '<div class="schedule-round"><div class="round-header">Shifts in order</div>';
+            arrangeShiftMembers(schedule).forEach((group, index) => {
+                const date = shiftDates[index];
+                html += `<div class="shift-pair">`;
+                html += `<div class="shift-info"><span class="shift-label">Shift ${index + 1}</span>`;
+                html += `<input type="date" class="shift-date${date ? '' : ' is-empty'}" data-index="${index}" value="${escapeHtml(date)}" aria-label="Date for shift ${index + 1} (optional)">`;
+                html += `<button type="button" class="shift-date-clear" data-index="${index}" title="Remove date" aria-label="Remove date for shift ${index + 1}">&times;</button></div>`;
+                html += `<span class="shift-workers">${group.map(nameOf).join(' &amp; ')}</span>`;
+                html += `</div>`;
+            });
+            html += '</div>';
+
+            html += '<div class="schedule-round"><div class="round-header">Shifts by worker</div>';
+            html += '<div class="table-wrap" id="workerTable"></div></div>';
+
+            outputEl.innerHTML = html;
+            renderWorkerTable(schedule, workerNames, numWorkers, shiftDates);
+        }
+
+        // Shift numbers, with the shift's date where one is set.
+        function renderWorkerTable(schedule, workerNames, numWorkers, shiftDates) {
+            const shiftText = shift => {
+                const date = formatShortDate(shiftDates[shift - 1]);
+                return date ? `${shift} (${escapeHtml(date)})` : String(shift);
+            };
+            const showCounts = schedule.length <= 60; // numbers stop fitting in the bar beyond this
+            let html = `<p class="worker-names-hint timeline-legend">
+                <span class="tl-key tl-work"></span> working
+                <span class="tl-key tl-off"></span> off (number = shifts off in between)
+                <span class="tl-key tl-work tl-b2b"></span> back-to-back</p>`;
+            html += '<table class="worker-table"><thead><tr><th>Worker</th><th>Shifts</th><th class="timeline-cell">Rest between shifts</th></tr></thead><tbody>';
+            getWorkerSummaries(schedule, numWorkers).forEach(summary => {
+                html += `<tr><td>${workerNameHtml(summary.worker, workerNames)}</td><td>${summary.shifts.map(shiftText).join(', ')}</td>`;
+                html += `<td class="timeline-cell">${restTimelineHtml(summary, schedule.length, shiftDates, showCounts)}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('workerTable').innerHTML = html;
+        }
+
+        // One bar spanning the whole schedule: a block for each shift the worker works and
+        // a gap, sized and labelled by length, for each run of shifts off.
+        function restTimelineHtml(summary, totalShifts, shiftDates, showCounts) {
+            const offRun = (length, between) => {
+                const label = between && showCounts ? length : '';
+                const title = between ? ` title="${length} shift${length === 1 ? '' : 's'} off"` : '';
+                return `<span class="tl-off${between ? '' : ' tl-edge'}" style="flex-grow: ${length}"${title}>${label}</span>`;
+            };
+            let html = '';
+            let previous = 0; // last shift worked, 0 before the first
+            summary.shifts.forEach(shift => {
+                const off = shift - previous - 1;
+                if (off > 0) html += offRun(off, previous > 0);
+                const date = formatShortDate(shiftDates[shift - 1]);
+                const backToBack = previous > 0 && off === 0;
+                html += `<span class="tl-work${backToBack ? ' tl-b2b' : ''}" title="Shift ${shift}${date ? ` (${escapeHtml(date)})` : ''}${backToBack ? ', back-to-back' : ''}"></span>`;
+                previous = shift;
+            });
+            if (totalShifts > previous) html += offRun(totalShifts - previous, false);
+
+            const breaks = summary.gaps.length ? `Shifts off between shifts: ${summary.gaps.join(', ')}` : 'Works one shift';
+            return `<div class="rest-timeline" role="img" aria-label="${breaks}">${html}</div>`;
+        }
+
+        // Applies a date change to one shift (see updateShiftDates).
+        function setShiftDate(index, value) {
+            if (!currentRecord) return;
+            currentRecord.shiftDates = updateShiftDates(currentRecord.shiftDates, index, value);
+            refreshShiftDates();
+        }
+
+        function fillDates() {
+            hideMessages();
+            if (!currentRecord) return;
+            const start = document.getElementById('fillStart').value;
+            const every = parseInt(document.getElementById('fillEvery').value, 10);
+            const unitDays = Number(document.getElementById('fillUnit').value);
+            if (!isDateString(start)) {
+                showError('Choose a date to fill from.');
+                return;
+            }
+            if (!Number.isInteger(every) || every < 1 || every > 365) {
+                showError('The fill interval must be a whole number from 1 to 365.');
+                return;
+            }
+            if (currentRecord.shiftDates.some(Boolean) && !confirm('Replace the dates already on shifts?')) return;
+            currentRecord.shiftDates = fillShiftDates(currentRecord.schedule.length, start, every * unitDays);
+            refreshShiftDates();
+        }
+
+        function clearDates() {
+            hideMessages();
+            if (!currentRecord || !currentRecord.shiftDates.some(Boolean)) return;
+            if (!confirm('Remove the dates from every shift?')) return;
+            currentRecord.shiftDates = currentRecord.shiftDates.map(() => '');
+            refreshShiftDates();
+        }
+
+        // Updates the date inputs in place (so the one being edited keeps focus) and the worker table.
+        function refreshShiftDates() {
+            document.querySelectorAll('#scheduleOutput .shift-date').forEach(input => {
+                const date = currentRecord.shiftDates[Number(input.dataset.index)];
+                if (input.value !== date) input.value = date;
+                input.classList.toggle('is-empty', !date);
+            });
+            renderWorkerTable(currentRecord.schedule, currentRecord.workerNames, currentRecord.numWorkers, currentRecord.shiftDates);
+        }
+
+        function handleShiftDateChange(event) {
+            const input = event.target.closest('.shift-date');
+            if (input) setShiftDate(Number(input.dataset.index), input.value);
+        }
+
+        function handleShiftDateClear(event) {
+            const button = event.target.closest('.shift-date-clear');
+            if (button) setShiftDate(Number(button.dataset.index), '');
+        }
+
+        function displayStats(schedule, numWorkers, minGapProvenBest) {
             const statsSection = document.getElementById('statsSection');
             const statsGrid = document.getElementById('statsGrid');
-            
+
             if (schedule.length === 0) {
                 statsSection.style.display = 'none';
                 return;
             }
-            
-            const stats = getScheduleStats(schedule);
-            
-            let statsHtml = `
+
+            const stats = getScheduleStats(schedule, numWorkers);
+            const item = (value, label) => `
                 <div class="stat-item">
-                    <div class="stat-value">${stats.totalWorkers}</div>
-                    <div class="stat-label">Total Workers</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${stats.totalRounds}</div>
-                    <div class="stat-label">Total Rounds</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${stats.shiftsPerRound}</div>
-                    <div class="stat-label">Shifts per Round</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${stats.totalUniquePairs}</div>
-                    <div class="stat-label">Unique Pairs</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">${stats.isComplete ? '✓' : '✗'}</div>
-                    <div class="stat-label">Complete Schedule</div>
-                </div>
-            `;
-            
-            statsGrid.innerHTML = statsHtml;
+                    <div class="stat-value">${value}</div>
+                    <div class="stat-label">${label}</div>
+                </div>`;
+
+            // Solo shifts have no pairs, so the pairing stats don't apply.
+            const pairStats = stats.workersPerShift === 1 ? '' :
+                item(`${stats.totalUniquePairs} / ${stats.expectedPairs}`, 'Unique Pairs') +
+                item(stats.isComplete ? '✓' : '✗', 'Everyone Meets') +
+                item(stats.repeatedPairs, 'Repeated Pairs');
+
+            statsGrid.innerHTML =
+                item(stats.totalWorkers, 'Total Workers') +
+                item(stats.totalShifts, 'Total Shifts') +
+                pairStats +
+                item(stats.minShifts === stats.maxShifts ? stats.minShifts : `${stats.minShifts}-${stats.maxShifts}`, 'Shifts per Worker') +
+                item(stats.backToBack, 'Back-to-Back Shifts') +
+                item(stats.minGap === null ? '-' : stats.minGap, 'Min Shifts Between') +
+                item(stats.avgGap === null ? '-' : stats.avgGap.toFixed(1), 'Avg Shifts Between');
+
+            if (stats.backToBack > 0 && minGapProvenBest === true) {
+                statsGrid.innerHTML += `<p class="worker-names-hint" style="grid-column: 1 / -1;">This schedule couldn't avoid back-to-back shifts: with ${stats.workersPerShift} of ${stats.totalWorkers} workers on each shift there aren't enough rested workers to fill every shift. Adding workers or reducing workers per shift helps.</p>`;
+            } else if (stats.backToBack > 0) {
+                statsGrid.innerHTML += `<p class="worker-names-hint" style="grid-column: 1 / -1;">This schedule has back-to-back shifts. The search stopped before finding an order without them, so one may still exist. Adding workers or reducing workers per shift makes one easier to find.</p>`;
+            }
+            if (stats.workersPerShift > 2 && stats.repeatedPairs > 0) {
+                statsGrid.innerHTML += `<p class="worker-names-hint" style="grid-column: 1 / -1;">With ${stats.workersPerShift} workers per shift some pairs have to share more than one shift to make sure everyone meets everyone.</p>`;
+            }
             statsSection.style.display = 'block';
         }
 
         function clearOutput() {
             document.getElementById('scheduleOutput').innerHTML =
-                '<div style="text-align: center; color: #7f8c8d; padding: 50px;">Enter the number of workers and click "Generate Schedule" to create your schedule.</div>';
+                '<div style="text-align: center; color: var(--muted-color); padding: 50px;">Enter the number of workers and click "Generate Schedule" to create your schedule.</div>';
             document.getElementById('statsSection').style.display = 'none';
+            document.getElementById('dateFill').hidden = true;
+            currentRecord = null;
+            unlinkSaved();
+            updateTitle();
+        }
+
+        function unlinkSaved() {
+            if (currentSavedId === null) return;
+            currentSavedId = null;
+            renderSavedList();
+            updateSaveButtons();
+        }
+
+        // The Number of Shifts field only applies to 1 worker per shift.
+        function updateNumShiftsVisibility() {
+            document.getElementById('numShiftsGroup').hidden =
+                parseInt(document.getElementById('workersPerShift').value, 10) !== 1;
+        }
+
+        // Resets every field and the output to how the page first loads. Saved schedules are kept.
+        function newSchedule() {
+            if (currentRecord && !confirm('Start a new schedule? Anything you haven\'t saved will be lost.')) return;
+            ['numWorkers', 'workersPerShift', 'workerNames', 'scheduleDate', 'scheduleDescription',
+             'numShifts', 'fillStart', 'fillEvery'].forEach(id => {
+                const field = document.getElementById(id);
+                field.value = field.defaultValue;
+            });
+            document.getElementById('fillUnit').selectedIndex = 0;
+            updateNumShiftsVisibility();
+            hideMessages();
+            clearOutput();
+            document.getElementById('numWorkers').focus();
+        }
+
+
+        // ----- Current schedule, title, save / load -----
+        const STORAGE_KEY = 'savedSchedules';
+        let currentRecord = null; // { numWorkers, workersPerShift, workerNames, schedule, minGapProvenBest, shiftDates }
+        let currentSavedId = null; // id of the saved schedule that's open, if any
+
+        function isDateString(value) {
+            return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+        }
+
+        function formatShortDate(value) {
+            if (!isDateString(value)) return '';
+            const [year, month, day] = value.split('-').map(Number);
+            if (!year || !month || !day) return '';
+            return new Date(year, month - 1, day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+
+        // One 'YYYY-MM-DD' or '' per shift; anything unusable becomes ''.
+        function cleanShiftDates(shiftDates, shiftCount) {
+            return Array.from({ length: shiftCount }, (_, i) =>
+                Array.isArray(shiftDates) && isDateString(shiftDates[i]) ? shiftDates[i] : '');
+        }
+
+        function formatDate(value) {
+            if (!value) return '';
+            const [year, month, day] = value.split('-').map(Number);
+            if (!year || !month || !day) return '';
+            return new Date(year, month - 1, day).toLocaleDateString(undefined,
+                { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function getMeta() {
+            return {
+                date: document.getElementById('scheduleDate').value,
+                description: document.getElementById('scheduleDescription').value.trim()
+            };
+        }
+
+        function updateTitle() {
+            const subtitle = document.getElementById('scheduleSubtitle');
+            if (!currentRecord) {
+                subtitle.textContent = '';
+                return;
+            }
+            const meta = getMeta();
+            subtitle.textContent = [formatDate(meta.date), meta.description].filter(Boolean).join(' · ');
+        }
+
+        // Shows a schedule. It's unlinked from any saved one unless keepSavedLink is set
+        // (regenerating keeps the link so Save Changes updates the opened schedule);
+        // opening a saved schedule links it again afterwards.
+        function renderRecord(record, { keepSavedLink = false } = {}) {
+            if (!keepSavedLink) unlinkSaved();
+            currentRecord = { ...record, shiftDates: cleanShiftDates(record.shiftDates, record.schedule.length) };
+            displaySchedule(record.schedule, record.workerNames, record.numWorkers, currentRecord.shiftDates);
+            displayStats(record.schedule, record.numWorkers, record.minGapProvenBest);
+            updateTitle();
+            // Start the fill from the first shift's date, else the schedule's date.
+            document.getElementById('fillStart').value =
+                currentRecord.shiftDates[0] || (isDateString(getMeta().date) ? getMeta().date : '');
+            document.getElementById('dateFill').hidden = false;
+        }
+
+        function readSaved() {
+            try {
+                const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                return Array.isArray(list) ? list : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function writeSaved(list) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                return true;
+            } catch (error) {
+                showError("Couldn't save in this browser (storage is unavailable or full). Use Download File instead.");
+                return false;
+            }
+        }
+
+        function buildRecord() {
+            return { ...currentRecord, shiftDates: [...currentRecord.shiftDates], ...getMeta() };
+        }
+
+        // e.g. "schedule-2026-10-05-Weekend-kitchen-crew.json". Characters that aren't allowed
+        // in file names are dropped and spaces become dashes.
+        function scheduleFileName(record) {
+            const description = (record.description || '')
+                .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/\.+$/, '')
+                .slice(0, 60);
+            return ['schedule', isDateString(record.date) ? record.date : '', description]
+                .filter(Boolean).join('-') + '.json';
+        }
+
+        // When the record was saved, e.g. "Oct 3, 2026, 2:53 PM" ('' if unknown).
+        function savedAtText(record) {
+            const savedAt = new Date(record.savedAt);
+            if (typeof record.savedAt !== 'string' || isNaN(savedAt)) return '';
+            return savedAt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+        }
+
+        function recordTitle(record) {
+            return [formatDate(record.date), record.description].filter(Boolean).join(' · ') || 'Untitled schedule';
+        }
+
+        function renderSavedList() {
+            const listEl = document.getElementById('savedList');
+            const saved = readSaved();
+            if (saved.length === 0) {
+                listEl.innerHTML = '<p class="saved-empty">No saved schedules yet.</p>';
+                return;
+            }
+            listEl.innerHTML = saved.map(record => `
+                <div class="saved-item${record.id === currentSavedId ? ' is-current' : ''}">
+                    <div class="saved-item-text">
+                        ${record.id === currentSavedId ? '<div class="saved-item-current">Open now</div>' : ''}
+                        <div class="saved-item-title">${escapeHtml(recordTitle(record))}</div>
+                        <div class="saved-item-meta">${escapeHtml(record.numWorkers)} workers · ${escapeHtml(record.workersPerShift)} per shift</div>
+                        ${savedAtText(record) ? `<div class="saved-item-meta">Saved ${escapeHtml(savedAtText(record))}</div>` : ''}
+                    </div>
+                    <div class="saved-item-actions">
+                        <button class="btn btn-small" data-action="load" data-id="${escapeHtml(record.id)}">Open</button>
+                        <button class="btn btn-small btn-danger" data-action="delete" data-id="${escapeHtml(record.id)}">Delete</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        // Checks a record read from storage or a file before it is shown.
+        function isValidRecord(record) {
+            if (!record || typeof record !== 'object') return false;
+            const { numWorkers, workersPerShift, schedule, workerNames } = record;
+            if (!Number.isInteger(numWorkers) || numWorkers < 2 || numWorkers > 50) return false;
+            if (!Number.isInteger(workersPerShift) || workersPerShift < 1 || workersPerShift > numWorkers) return false;
+            if (workerNames !== null && workerNames !== undefined &&
+                !(Array.isArray(workerNames) && workerNames.length === numWorkers &&
+                  workerNames.every(name => typeof name === 'string'))) return false;
+            return Array.isArray(schedule) && schedule.length > 0 && schedule.every(group =>
+                Array.isArray(group) && group.length === workersPerShift &&
+                group.every(w => Number.isInteger(w) && w >= 1 && w <= numWorkers));
+        }
+
+        function loadRecord(record) {
+            document.getElementById('numWorkers').value = record.numWorkers;
+            document.getElementById('workersPerShift').value = record.workersPerShift;
+            document.getElementById('numShifts').value = record.workersPerShift === 1 ? record.schedule.length : '';
+            updateNumShiftsVisibility();
+            document.getElementById('workerNames').value = record.workerNames ? record.workerNames.join('\n') : '';
+            document.getElementById('scheduleDate').value = /^\d{4}-\d{2}-\d{2}$/.test(record.date || '') ? record.date : '';
+            document.getElementById('scheduleDescription').value = typeof record.description === 'string'
+                ? record.description.slice(0, 100) : '';
+            renderRecord({
+                numWorkers: record.numWorkers,
+                workersPerShift: record.workersPerShift,
+                workerNames: record.workerNames || null,
+                schedule: record.schedule,
+                minGapProvenBest: record.minGapProvenBest === true,
+                shiftDates: record.shiftDates
+            });
+        }
+
+        function newRecordId() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+
+        function saveCurrentSchedule(asNew = false) {
+            hideMessages();
+            if (!currentRecord) {
+                showError('No schedule to save. Please generate a schedule first.');
+                return;
+            }
+            const saved = readSaved();
+            const index = asNew ? -1 : saved.findIndex(item => item.id === currentSavedId);
+            const record = { ...buildRecord(), id: index >= 0 ? currentSavedId : newRecordId(), savedAt: new Date().toISOString() };
+            if (index >= 0) {
+                saved[index] = record; // update in place, keeping its spot in the list
+            } else {
+                saved.unshift(record);
+            }
+            if (writeSaved(saved)) {
+                currentSavedId = record.id;
+                renderSavedList();
+                updateSaveButtons();
+                showSuccess(index >= 0 ? 'Changes saved.' : asNew ? 'Saved as a new copy in this browser.' : 'Schedule saved in this browser.');
+            }
+        }
+
+        // "Save Changes" updates the saved schedule that's open; otherwise saving makes a new one.
+        function updateSaveButtons() {
+            const linked = currentSavedId !== null && readSaved().some(item => item.id === currentSavedId);
+            document.getElementById('saveBtn').textContent = linked ? 'Save Changes' : 'Save in Browser';
+            document.getElementById('saveAsNewBtn').hidden = !linked;
+        }
+
+        function handleSavedClick(event) {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            hideMessages();
+            const saved = readSaved();
+            const record = saved.find(item => item.id === button.dataset.id);
+            if (!record) return;
+
+            if (button.dataset.action === 'load') {
+                if (!isValidRecord(record)) {
+                    showError('That saved schedule is damaged and could not be loaded.');
+                    return;
+                }
+                loadRecord(record);
+                currentSavedId = record.id;
+                renderSavedList();
+                updateSaveButtons();
+                showSuccess('Schedule opened.');
+            } else if (confirm(`Delete "${recordTitle(record)}"?`)) {
+                writeSaved(saved.filter(item => item.id !== record.id));
+                if (record.id === currentSavedId) currentSavedId = null;
+                renderSavedList();
+                updateSaveButtons();
+            }
+        }
+
+        function exportSchedule() {
+            hideMessages();
+            if (!currentRecord) {
+                showError('No schedule to download. Please generate a schedule first.');
+                return;
+            }
+            const record = { ...buildRecord(), savedAt: new Date().toISOString() };
+            const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = scheduleFileName(record);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+
+        function importSchedule(event) {
+            const file = event.target.files[0];
+            event.target.value = ''; // lets the same file be chosen again
+            if (!file) return;
+            hideMessages();
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const record = JSON.parse(reader.result);
+                    if (!isValidRecord(record)) throw new Error('invalid');
+                    loadRecord(record);
+                    showSuccess('Schedule opened from file.');
+                } catch (error) {
+                    showError("That file isn't a valid schedule.");
+                }
+            };
+            reader.onerror = () => showError("Couldn't read that file.");
+            reader.readAsText(file);
         }
 
         // Dark mode functionality
@@ -897,12 +1564,13 @@
             themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
             
             // Save preference to localStorage
-            localStorage.setItem('theme', newTheme);
+            try { localStorage.setItem('theme', newTheme); } catch (error) { /* storage unavailable */ }
         }
 
         // Initialize theme from localStorage or system preference
         function initializeTheme() {
-            const savedTheme = localStorage.getItem('theme');
+            let savedTheme = null;
+            try { savedTheme = localStorage.getItem('theme'); } catch (error) { /* storage unavailable */ }
             const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             
             let theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
@@ -912,28 +1580,9 @@
             themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
 
-        // Algorithm description functionality
-        function updateAlgorithmDescription() {
-            const algorithm = document.getElementById('algorithm').value;
-            
-            // Hide all descriptions
-            document.querySelectorAll('.algorithm-description').forEach(desc => {
-                desc.classList.remove('active');
-            });
-            
-            // Show selected description
-            const selectedDesc = document.getElementById(algorithm + 'Description');
-            if (selectedDesc) {
-                selectedDesc.classList.add('active');
-            }
-        }
-
         // Print schedule functionality
         function printSchedule() {
-            const scheduleOutput = document.getElementById('scheduleOutput');
-            const statsSection = document.getElementById('statsSection');
-            
-            if (scheduleOutput.innerHTML.includes('Enter the number of workers')) {
+            if (!currentRecord) {
                 showError('No schedule to print. Please generate a schedule first.');
                 return;
             }
@@ -986,9 +1635,22 @@
         // Event listeners
         document.getElementById('generateBtn').addEventListener('click', generateScheduleUI);
         document.getElementById('clearBtn').addEventListener('click', clearSchedule);
+        document.getElementById('newScheduleBtn').addEventListener('click', newSchedule);
+        document.getElementById('workersPerShift').addEventListener('input', updateNumShiftsVisibility);
+        document.getElementById('fillDatesBtn').addEventListener('click', fillDates);
+        document.getElementById('clearDatesBtn').addEventListener('click', clearDates);
         document.getElementById('printBtn').addEventListener('click', printSchedule);
+        document.getElementById('saveBtn').addEventListener('click', () => saveCurrentSchedule());
+        document.getElementById('saveAsNewBtn').addEventListener('click', () => saveCurrentSchedule(true));
+        document.getElementById('exportBtn').addEventListener('click', exportSchedule);
+        document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+        document.getElementById('importFile').addEventListener('change', importSchedule);
+        document.getElementById('savedList').addEventListener('click', handleSavedClick);
+        document.getElementById('scheduleOutput').addEventListener('change', handleShiftDateChange);
+        document.getElementById('scheduleOutput').addEventListener('click', handleShiftDateClear);
+        document.getElementById('scheduleDate').addEventListener('input', updateTitle);
+        document.getElementById('scheduleDescription').addEventListener('input', updateTitle);
         document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
-        document.getElementById('algorithm').addEventListener('change', updateAlgorithmDescription);
         document.getElementById('workerNames').addEventListener('blur', syncWorkerCount);
 
         // Allow Enter key to trigger generation
@@ -1002,7 +1664,8 @@
         window.addEventListener('load', function() {
             initializeTheme();
             clearOutput();
-            updateAlgorithmDescription(); // Show initial algorithm description
+            renderSavedList();
+            updateNumShiftsVisibility();
             updateTimestamp(); // Initialize timestamp
         });
     </script>
