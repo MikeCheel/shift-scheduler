@@ -2,10 +2,10 @@
   "name": "shift-scheduler",
   "version": "1.0.0",
   "description": "A web application for generating fair and balanced work schedules using round-robin pairing algorithms",
-  "main": "shift-scheduler.html",
+  "main": "index.html",
   "scripts": {
     "test": "node src/tests/schedule-generator-tests.js",
-    "start": "open shift-scheduler.html || start shift-scheduler.html || xdg-open shift-scheduler.html"
+    "start": "open index.html || start index.html || xdg-open index.html"
   },
   "keywords": [
     "scheduler",
@@ -17,9 +17,10 @@
   ],
   "author": "Shift Scheduler Project",
   "license": "MIT",
+  "homepage": "https://mikecheel.github.io/shift-scheduler/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/shift-scheduler-2.git"
+    "url": "https://github.com/MikeCheel/shift-scheduler.git"
   },
   "engines": {
     "node": ">=14.0.0"
