@@ -1,5 +1,5 @@
 /**
- * Worker Schedule Generator
+ * Shift Schedule Generator
  *
  * Rules:
  *  1. No two workers share a shift again until every pair has shared one.
