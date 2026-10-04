@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Worker Shift Scheduler</title>
+    <title>Shift Scheduler</title>
     <style>
         :root {
             --primary-color: #667eea;
@@ -538,6 +538,34 @@
             }
         }
 
+        @media (max-width: 1100px) {
+            /* Stack each worker as a card: name, shifts, then a full-width timeline */
+            .table-wrap .worker-table, .table-wrap .worker-table tbody, .table-wrap .worker-table tr, .table-wrap .worker-table td {
+                display: block;
+            }
+
+            .table-wrap .worker-table thead {
+                display: none;
+            }
+
+            .table-wrap .worker-table tr {
+                padding: 10px 0;
+                border-bottom: 1px solid var(--input-border);
+            }
+
+            .table-wrap .worker-table td {
+                padding: 2px 0;
+                border-bottom: none;
+                text-align: left;
+            }
+
+            .table-wrap .worker-table td:first-child {
+                font-weight: 600;
+                width: auto;
+                white-space: normal;
+            }
+        }
+
         @media (max-width: 480px) {
             .button-group, .field-row {
                 grid-template-columns: 1fr;
@@ -588,13 +616,44 @@
             border-bottom: 1px solid var(--input-border);
         }
 
+        .shift-chips {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+            justify-items: stretch;
+            text-align: left;
+        }
+
+        .shift-chip {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            padding: 3px 8px;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .shift-chip small {
+            font-size: 0.75rem;
+            color: var(--muted-color);
+        }
+
+        .worker-table td:first-child {
+            width: 1%;
+            white-space: nowrap;
+            vertical-align: top;
+        }
+
         .worker-table .timeline-cell {
-            width: 55%;
-            min-width: 220px;
+            margin-top: 6px;
         }
 
         .rest-timeline {
             display: flex;
+            width: 100%;
+            box-sizing: border-box;
             gap: 1px;
             height: 22px;
             border-radius: 4px;
@@ -620,8 +679,8 @@
         }
 
         .tl-off.tl-edge {
-            background: transparent;
-            border: 1px dashed var(--input-border);
+            background: var(--input-border);
+            opacity: 0.45;
         }
 
         .tl-work.tl-b2b {
@@ -840,7 +899,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Worker Shift Scheduler</h1>
+            <h1>Shift Scheduler</h1>
             <p>Generate fair and balanced work schedules for your team</p>
             <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
                 🌙
@@ -1116,17 +1175,18 @@
         function renderWorkerTable(schedule, workerNames, numWorkers, shiftDates) {
             const shiftText = shift => {
                 const date = formatShortDate(shiftDates[shift - 1]);
-                return date ? `${shift} (${escapeHtml(date)})` : String(shift);
+                return `<b>${shift}</b>` + (date ? `<small>${escapeHtml(date)}</small>` : '');
             };
-            const showCounts = schedule.length <= 60; // numbers stop fitting in the bar beyond this
+            // numbers stop fitting in the bar beyond this, and sooner on a narrow screen
+            const showCounts = schedule.length <= (window.innerWidth <= 1100 ? 20 : 60);
             let html = `<p class="worker-names-hint timeline-legend">
                 <span class="tl-key tl-work"></span> working
                 <span class="tl-key tl-off"></span> off (number = shifts off in between)
                 <span class="tl-key tl-work tl-b2b"></span> back-to-back</p>`;
-            html += '<table class="worker-table"><thead><tr><th>Worker</th><th>Shifts</th><th class="timeline-cell">Rest between shifts</th></tr></thead><tbody>';
+            html += '<table class="worker-table"><thead><tr><th>Worker</th><th>Shifts and rest between shifts</th></tr></thead><tbody>';
             getWorkerSummaries(schedule, numWorkers).forEach(summary => {
-                html += `<tr><td>${workerNameHtml(summary.worker, workerNames)}</td><td>${summary.shifts.map(shiftText).join(', ')}</td>`;
-                html += `<td class="timeline-cell">${restTimelineHtml(summary, schedule.length, shiftDates, showCounts)}</td></tr>`;
+                html += `<tr><td>${workerNameHtml(summary.worker, workerNames)}</td><td><div class="shift-chips">${summary.shifts.map(s => `<span class="shift-chip">${shiftText(s)}</span>`).join('')}</div>`;
+                html += `<div class="timeline-cell">${restTimelineHtml(summary, schedule.length, shiftDates, showCounts)}</div></td></tr>`;
             });
             html += '</tbody></table>';
             document.getElementById('workerTable').innerHTML = html;
